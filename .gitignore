@@ -33,6 +33,7 @@
 *.exe
 *.out
 *.app
+json_test
 
 # Cmake 
 CMakeCache.txt

@@ -92,7 +92,7 @@ inline T parse(const std::string& value, const T& default_value)
     if ( not res ) {
         res = default_value;
     }
-    return res.get();
+    return *res;
 }
 
 } // namespace detail

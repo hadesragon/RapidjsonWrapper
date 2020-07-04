@@ -9,9 +9,6 @@
 
 #include "json/json_value.h"
 
-namespace wave {
-namespace common {
-
 TEST(JsonTest, ucs4)
 {
     std::string json = R"({"content":"\uD83C\uDFAF"})";
@@ -116,16 +113,33 @@ TEST(JsonTest, json_format_error)
     EXPECT_EQ(doc.get_load_error(), "Error offset[0]: No error.");
 
     EXPECT_FALSE(doc.load_from_buffer(R"({"a1":["a","b","c","d","e"])"));
+
+#if RAPIDJSON_MAJOR_VERSION >= 1 && RAPIDJSON_MINOR_VERSION > 0
+    EXPECT_EQ(doc.get_load_error(), "Error offset[27]: Missing a comma or '}' after an object member.");
+#else
     EXPECT_EQ(doc.get_load_error(), "Error offset[28]: Missing a comma or '}' after an object member.");
+#endif
 
     EXPECT_FALSE(doc.load_from_buffer(R"({"e":{"a1":["a","b","c","d","e"]})"));
+#if RAPIDJSON_MAJOR_VERSION >= 1 && RAPIDJSON_MINOR_VERSION > 0
+    EXPECT_EQ(doc.get_load_error(), "Error offset[33]: Missing a comma or '}' after an object member.");
+#else
     EXPECT_EQ(doc.get_load_error(), "Error offset[34]: Missing a comma or '}' after an object member.");
+#endif
 
     EXPECT_FALSE(doc.load_from_buffer(R"(["a","b""c","d","e"])"));
+#if RAPIDJSON_MAJOR_VERSION >= 1 && RAPIDJSON_MINOR_VERSION > 0
+    EXPECT_EQ(doc.get_load_error(), "Error offset[8]: Missing a comma or ']' after an array element.");
+#else
     EXPECT_EQ(doc.get_load_error(), "Error offset[9]: Missing a comma or ']' after an array element.");
+#endif
 
     EXPECT_FALSE(doc.load_from_buffer(R"(["a","b","c","d","e")"));
+#if RAPIDJSON_MAJOR_VERSION >= 1 && RAPIDJSON_MINOR_VERSION > 0
+    EXPECT_EQ(doc.get_load_error(), "Error offset[20]: Missing a comma or ']' after an array element.");
+#else
     EXPECT_EQ(doc.get_load_error(), "Error offset[21]: Missing a comma or ']' after an array element.");
+#endif
 }
 
 TEST(JsonTest, rapidjson_format)
@@ -149,20 +163,20 @@ TEST(JsonTest, rapidjson_format)
         Json::ValueRef item_h = array.push_back();
         item_h = "h";                           // str copy
         Json::ValueRef item_i = array.push_back();
-        //item_i.setValue(Json::string_view("i")); // str no copy
+        item_i.setValue(Json::string_view("i")); // str no copy
 
         Json::ObjectRef object = root["object"];
         object["d"] = 4;                    // copy
         object[std::string("e")] = 5;       // copy
-        //object[Json::string_view("f")] = 6; // no copy
+        object[Json::string_view("f")] = 6; // no copy
 
         Json::ValueRef g = object.insert("g");
         g = "g";
         Json::ValueRef h = object.insert(std::string("h"));
         std::string h_str = "h";
-        //h = Json::string_view(h_str.data(), h_str.length());
+        h = Json::string_view(h_str.data(), h_str.length());
         std::string i = "itest";
-        //object.insert(Json::string_view("i"), i);
+        object.insert(Json::string_view("i"), i);
 
         std::set<int> c = {1,2,3,4,5,6};
         std::map<std::string, std::string> d = { {"a","1"}, {"b","1"}, {"c","3"} };
@@ -186,7 +200,7 @@ TEST(JsonTest, rapidjson_format)
         EXPECT_TRUE(root["object"].is_object());
         EXPECT_TRUE(root["array"].is_array());
 
-        EXPECT_THROW(Json::ArrayRef array = root["object"], Json::JsonValueException);
+        EXPECT_THROW(Json::ArrayRef array = root["object"], std::exception);
         Json::ObjectRef object = root["object"];
         EXPECT_EQ(object.size(), 9u);
         EXPECT_EQ(object["a"].as<int>(), 1);
@@ -196,7 +210,7 @@ TEST(JsonTest, rapidjson_format)
         EXPECT_EQ(object["e"].as<int>(), 5);
         EXPECT_EQ(object["f"].as<int>(), 6);
 
-        EXPECT_THROW(Json::ObjectRef object = root["array"], Json::JsonValueException);
+        EXPECT_THROW(Json::ObjectRef object = root["array"], std::exception);
         Json::ArrayRef array = root["array"];
         EXPECT_EQ(array.size(), 9u);
         EXPECT_EQ(array[0].as<std::string>(), "a");
@@ -281,10 +295,10 @@ TEST(JsonTest, json_get)
         EXPECT_EQ(object["char_c"].as<char>(), 'A');
         EXPECT_EQ(object["char_s"].as<char>(), 'A');
 
-        EXPECT_EQ(object["int8-"].get<int8_t>().get(), -128);
+        EXPECT_EQ(*object["int8-"].get<int8_t>(), -128);
         EXPECT_EQ(object["int8-"].as<int>(), -128);
         EXPECT_TRUE(object["int8-"].is_integral());
-        EXPECT_EQ(object["int8+"].get<int8_t>().get(), 127);
+        EXPECT_EQ(*object["int8+"].get<int8_t>(), 127);
         EXPECT_EQ(object["int8+"].as<int>(), 127);
         EXPECT_TRUE(object["int8+"].is_integral());
         EXPECT_FALSE(object["int8e"].get<int8_t>());
@@ -297,7 +311,7 @@ TEST(JsonTest, json_get)
         EXPECT_FALSE(object["uint8-"].get<uint8_t>());
         EXPECT_EQ(object["uint8-"].as<uint32_t>(), -1);
         EXPECT_TRUE(object["uint8-"].is_integral());
-        EXPECT_EQ(object["uint8+"].get<uint8_t>().get(), 255);
+        EXPECT_EQ(*object["uint8+"].get<uint8_t>(), 255);
         EXPECT_EQ(object["uint8+"].as<uint32_t>(), 255);
         EXPECT_TRUE(object["uint8+"].is_integral());
         EXPECT_FALSE(object["uint8e"].get<uint8_t>());
@@ -307,10 +321,10 @@ TEST(JsonTest, json_get)
         EXPECT_EQ(object["uint8s"].as<uint32_t>(), 255);
         EXPECT_FALSE(object["uint8s"].is_integral());
 
-        EXPECT_EQ(object["int32-"].get<int32_t>().get(), -2147483648);
+        EXPECT_EQ(*object["int32-"].get<int32_t>(), -2147483648);
         EXPECT_EQ(object["int32-"].as<int>(), -2147483648);
         EXPECT_TRUE(object["int32-"].is_integral());
-        EXPECT_EQ(object["int32+"].get<int32_t>().get(), 2147483647);
+        EXPECT_EQ(*object["int32+"].get<int32_t>(), 2147483647);
         EXPECT_EQ(object["int32+"].as<int>(), 2147483647);
         EXPECT_TRUE(object["int32+"].is_integral());
         EXPECT_FALSE(object["int32e"].get<int32_t>());
@@ -323,7 +337,7 @@ TEST(JsonTest, json_get)
         EXPECT_FALSE(object["uint32-"].get<uint32_t>());
         EXPECT_EQ(object["uint32-"].as<uint32_t>(), -1);
         EXPECT_TRUE(object["uint32-"].is_integral());
-        EXPECT_EQ(object["uint32+"].get<uint32_t>().get(), 4294967295);
+        EXPECT_EQ(*object["uint32+"].get<uint32_t>(), 4294967295);
         EXPECT_EQ(object["uint32+"].as<uint32_t>(), 4294967295);
         EXPECT_TRUE(object["uint32+"].is_integral());
         EXPECT_FALSE(object["uint32e"].get<uint32_t>());
@@ -333,10 +347,10 @@ TEST(JsonTest, json_get)
         EXPECT_EQ(object["uint32s"].as<uint32_t>(), 4294967295);
         EXPECT_FALSE(object["uint32s"].is_integral());
 
-        EXPECT_EQ(object["int64-"].get<int64_t>().get(),(-9223372036854775807-1));
+        EXPECT_EQ(*object["int64-"].get<int64_t>(),(-9223372036854775807-1));
         EXPECT_EQ(object["int64-"].as<int64_t>(),(-9223372036854775807-1));
         EXPECT_TRUE(object["int64-"].is_integral());
-        EXPECT_EQ(object["int64+"].get<int64_t>().get(), 9223372036854775807L);
+        EXPECT_EQ(*object["int64+"].get<int64_t>(), 9223372036854775807L);
         EXPECT_EQ(object["int64+"].as<int64_t>(), 9223372036854775807L);
         EXPECT_TRUE(object["int64+"].is_integral());
         EXPECT_FALSE(object["int64s"].get<int64_t>());
@@ -346,16 +360,16 @@ TEST(JsonTest, json_get)
         EXPECT_FALSE(object["uint64-"].get<uint64_t>());
         EXPECT_EQ(object["uint64-"].as<uint64_t>(), -1);
         EXPECT_TRUE(object["uint64-"].is_integral());
-        EXPECT_EQ(object["uint64+"].get<uint64_t>().get(), 18446744073709551614u);
+        EXPECT_EQ(*object["uint64+"].get<uint64_t>(), 18446744073709551614u);
         EXPECT_EQ(object["uint64+"].as<uint64_t>(), 18446744073709551614u);
         EXPECT_TRUE(object["uint64+"].is_integral());
         EXPECT_FALSE(object["uint64s"].get<uint64_t>());
         EXPECT_EQ(object["uint64s"].as<uint64_t>(), 18446744073709551614u);
         EXPECT_FALSE(object["uint64s"].is_integral());
 
-        EXPECT_EQ(object["double-"].get<double>().get(), -92233720368547.75806);
+        EXPECT_EQ(*object["double-"].get<double>(), -92233720368547.75806);
         EXPECT_FALSE(object["double-"].is_integral());
-        EXPECT_EQ(object["double+"].get<double>().get(), 922337203685477.5806);
+        EXPECT_EQ(*object["double+"].get<double>(), 922337203685477.5806);
         EXPECT_FALSE(object["double+"].is_integral());
         EXPECT_FALSE(object["doubles"].get<double>());
         EXPECT_FALSE(object["doubles"].is_integral());
@@ -364,6 +378,7 @@ TEST(JsonTest, json_get)
     }
 }
 
+/*
 TEST(JsonTest, query_test)
 {
     Json::Document doc;
@@ -400,6 +415,7 @@ TEST(JsonTest, query_test)
     EXPECT_EQ(n4.as<std::string>(), "c");
     EXPECT_EQ(q4->as<std::string>(), "c");
 }
+*/
 
 TEST(JsonTest, json_merge)
 {
@@ -642,6 +658,3 @@ TEST(JsonTest, find_test)
     EXPECT_TRUE(root.find_all(std::vector<std::string>{"TEST2"}));
     EXPECT_FALSE(root.find_all(std::vector<std::string>{"TEST2", "TEST3"}));
 }
-
-} // namespace common
-} // namespace wave
