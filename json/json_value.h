@@ -579,7 +579,7 @@ public:
         , Container<T, Args...>>::type* = nullptr
     >
     inline void set_container(const Container<T, Args...>& array, bool str_copy = true) {
-        valueRef_.set_container(array, true);
+        valueRef_.set_container(array, str_copy);
     }
 
     ValueRef operator[](size_t index) const {
@@ -799,7 +799,7 @@ public:
         , Container<std::string, Value, Args...>>::type* = nullptr
     >
     inline void set_container(const Container<std::string, Value, Args...>& map, bool str_copy = true) {
-        valueRef_.set_container(map, true);
+        valueRef_.set_container(map, str_copy);
     }
 
     /// get_value<bool>()
