@@ -149,20 +149,20 @@ TEST(JsonTest, rapidjson_format)
         Json::ValueRef item_h = array.push_back();
         item_h = "h";                           // str copy
         Json::ValueRef item_i = array.push_back();
-        item_i.setValue(Json::string_view("i")); // str no copy
+        //item_i.setValue(Json::string_view("i")); // str no copy
 
         Json::ObjectRef object = root["object"];
         object["d"] = 4;                    // copy
         object[std::string("e")] = 5;       // copy
-        object[Json::string_view("f")] = 6; // no copy
+        //object[Json::string_view("f")] = 6; // no copy
 
         Json::ValueRef g = object.insert("g");
         g = "g";
         Json::ValueRef h = object.insert(std::string("h"));
         std::string h_str = "h";
-        h = Json::string_view(h_str.data(), h_str.length());
+        //h = Json::string_view(h_str.data(), h_str.length());
         std::string i = "itest";
-        object.insert(Json::string_view("i"), i);
+        //object.insert(Json::string_view("i"), i);
 
         std::set<int> c = {1,2,3,4,5,6};
         std::map<std::string, std::string> d = { {"a","1"}, {"b","1"}, {"c","3"} };

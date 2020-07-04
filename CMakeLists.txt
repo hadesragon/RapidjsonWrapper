@@ -3,49 +3,31 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 project(RapidjsonWrapper LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 
-#default
+# Default FindPackage
 find_package(Threads REQUIRED)
 find_package(RapidJSON REQUIRED)
+find_package(GTest REQUIRED)
 
-include(ExternalProject)
-externalproject_add(
-  googletest 
-  URL https://github.com/google/googletest/archive/release-1.10.0.zip
-  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/lib
-  INSTALL_COMMAND ""
-)
+# include Cmake Module
+include(cmake/TargetDistclean.cmake)
 
-ExternalProject_Get_Property(googletest binary_dir)
-ExternalProject_Get_Property(googletest source_dir)
-add_library(gtest UNKNOWN IMPORTED)
-add_library(gtest_main UNKNOWN IMPORTED)
-set_target_properties(gtest PROPERTIES
-    IMPORTED_LOCATION ${binary_dir}/libgtest.a
-)
-set_target_properties(gtest_main PROPERTIES
-    IMPORTED_LOCATION ${binary_dir}/libgtest_main.a
-)
-add_dependencies(gtest googletest)
-add_dependencies(gtest_main googletest)
-
+# include
 set(GTestInclude ${source_dir}/googletest/include)
-message(STATUS "gtest include : ${GTestInclude}")
+set(OptionalInclude ${CMAKE_SOURCE_DIR}/optional-lite/include)
+set(StringViewInclude ${CMAKE_SOURCE_DIR}/string-view-lite/include)
+include_directories(${CMAKE_SOURCE_DIR} ${GTestInclude} ${RAPIDJSON_INCLUDE_DIRS} ${OptionalInclude} ${StringViewInclude})
 
-include_directories(${CMAKE_SOURCE_DIR} ${GTestInclude} ${Rapidjson_INCLUDE_DIRS})
 
+# excutable
 add_executable(json_test ${CMAKE_CURRENT_SOURCE_DIR}/test/json_unittest.cpp)
 
-
-include(cmake/TargetDistclean.cmake)
 
 ######################################
 # Configure the test to use GoogleTest
 #
 # If used often, could be made a macro.
 
-add_dependencies(json_test gtest)
-target_link_libraries(json_test gtest)
-target_link_libraries(json_test gtest_main)
+target_link_libraries(json_test GTest::GTest GTest::Main)
 
 ##################################
 # Just make the test runnable with

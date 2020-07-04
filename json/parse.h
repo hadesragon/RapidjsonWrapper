@@ -8,17 +8,21 @@
 #include <cstdlib>
 #include <cerrno>
 
-#include <boost/optional.hpp>
+#include <nonstd/optional.hpp>
 
 namespace Json {
 namespace detail {
 
+template<typename T>
+using optional = nonstd::optional<T>;
+
 template<typename T, typename std::enable_if<
     std::is_integral<T>::value && std::is_same<T, bool>::value, T>::type* = nullptr>
-inline boost::optional<T> parse(const std::string& value) {
-    boost::optional<bool> res;
+inline optional<T> parse(const std::string& value) {
+    optional<bool> res;
     if( not value.empty() ) {
-        std::string lower_value_string = common::lower_string(value);
+        std::string lower_value_string = value;
+        std::transform(lower_value_string.begin(), lower_value_string.end(), lower_value_string.begin(), ::tolower);
         if (lower_value_string == "true" or lower_value_string == "false") {
             res = ("true" == lower_value_string);
         }
@@ -28,8 +32,8 @@ inline boost::optional<T> parse(const std::string& value) {
 
 template<typename T, typename std::enable_if<
     std::is_integral<T>::value && std::is_signed<T>::value, T>::type* = nullptr>
-inline boost::optional<T> parse(const std::string& value) {
-    boost::optional<T> res;
+inline optional<T> parse(const std::string& value) {
+    optional<T> res;
     if ( not value.empty() ) {
         const char* const value_c_str = value.c_str();
         char* end;
@@ -48,8 +52,8 @@ inline boost::optional<T> parse(const std::string& value) {
 
 template<typename T, typename std::enable_if<
     std::is_integral<T>::value && !std::is_same<T, bool>::value && std::is_unsigned<T>::value, T>::type* = nullptr>
-inline boost::optional<T> parse(const std::string& value) {
-    boost::optional<T> res;
+inline optional<T> parse(const std::string& value) {
+    optional<T> res;
     if ( not value.empty() and value.find("-") == std::string::npos ) {
         const char* const value_c_str = value.c_str();
         char* end;
@@ -67,8 +71,8 @@ inline boost::optional<T> parse(const std::string& value) {
 }
 
 template<typename T, typename std::enable_if<std::is_floating_point<T>::value, T>::type* = nullptr>
-inline boost::optional<T> parse(const std::string& value) {
-    boost::optional<T> res;
+inline optional<T> parse(const std::string& value) {
+    optional<T> res;
     if ( not value.empty() ) {
         const char* const value_c_str = value.c_str();
         char* end;
@@ -84,7 +88,7 @@ inline boost::optional<T> parse(const std::string& value) {
 template <typename T>
 inline T parse(const std::string& value, const T& default_value)
 {
-    boost::optional<T> res = parse<T>(value);
+    optional<T> res = parse<T>(value);
     if ( not res ) {
         res = default_value;
     }

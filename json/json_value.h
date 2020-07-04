@@ -10,8 +10,8 @@
 #include <fstream>
 #include <cstdio>
 
-#include <boost/optional.hpp>
-#include <boost/utility/string_view.hpp>
+#include <nonstd/optional.hpp>
+#include <nonstd/string_view.hpp>
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -39,9 +39,8 @@ class Document;
 struct MemberRef;
 
 template<typename T>
-using optional = boost::optional<T>;
-
-using string_view = boost::string_view;
+using optional = nonstd::optional<T>;
+using string_view = nonstd::string_view;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// std::istream wrapper
@@ -254,14 +253,14 @@ class ValueRef {
 
 public:
     /// constructors:
-    ValueRef(rapidjson::Value&, rapidjson::Document::AllocatorType&) 
+    ValueRef(rapidjson::Value& value, rapidjson::Document::AllocatorType& alloc) 
         : value_(value), alloc_(alloc) {}
-    ValueRef(const ValueRef&) 
+    ValueRef(const ValueRef& rfs) 
         : value_(rfs.value_), alloc_(rfs.alloc_) {}
-    ValueRef(const ArrayRef&)
+    ValueRef(const ArrayRef& array)
         : value_(array.get_valueref().value_), alloc_(array.get_valueref().alloc_) {}
-    ValueRef(const ObjectRef&)
-        : value_(obj.get_valueref().value_), alloc_(obj.get_valueref().alloc_)
+    ValueRef(const ObjectRef& obj)
+        : value_(obj.get_valueref().value_), alloc_(obj.get_valueref().alloc_) {}
 
     virtual ~ValueRef() = default;
 
@@ -332,30 +331,30 @@ public:
 
     /// set Container ( Container<Number> )
     template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_iterable<Container<T, Args...>>::value &&
-        !future::is_map<Container<T, Args...>>::value
+        detail::is_iterable<Container<T, Args...>>::value &&
+        !detail::is_map<Container<T, Args...>>::value
         , Container<T, Args...>>::type* = nullptr
     >
     void set_container(const Container<T, Args...>& array, bool str_copy = true);
 
     /// set Container ( Continaer<String> )
     template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_iterable<Container<std::string, Args...>>::value &&
-        !future::is_map<Container<std::string, Args...>>::value
+        detail::is_iterable<Container<std::string, Args...>>::value &&
+        !detail::is_map<Container<std::string, Args...>>::value
         , Container<std::string, Args...> >::type* = nullptr
     >
     void set_container(const Container<std::string, Args...>& array, bool str_copy = true);
 
     /// assign from map<string, Number>
     template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_map<Container<std::string, Value, Args...>>::value
+        detail::is_map<Container<std::string, Value, Args...>>::value
         , Container<std::string, Value, Args...>>::type* = nullptr
     >
     void set_container(const Container<std::string, Value, Args...>& map, bool str_copy = true);
 
     /// assign from map<string, string>
     template<template <typename...> class Container, typename std::enable_if<
-        future::is_map<Container<std::string, std::string>>::value
+        detail::is_map<Container<std::string, std::string>>::value
         , Container<std::string, std::string>>::type* = nullptr
     >
     void set_container(const Container<std::string, std::string>& map, bool str_copy = true);
@@ -374,8 +373,8 @@ public:
 
     /// set to Array from array
     template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_iterable<Container<T, Args...>>::value &&
-        !future::is_map<Container<T, Args...>>::value
+        detail::is_iterable<Container<T, Args...>>::value &&
+        !detail::is_map<Container<T, Args...>>::value
         , Container<T, Args...>>::type* = nullptr
     >
     ArrayRef set_array(const Container<T, Args...>& array, bool str_copy = true);
@@ -408,7 +407,7 @@ public:
 
     /// set to Object from a map
     template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_map<Container<std::string, Value, Args...>>::value
+        detail::is_map<Container<std::string, Value, Args...>>::value
         , Container<std::string, Value, Args...>>::type* = nullptr
     >
     ObjectRef set_object(const Container<std::string, Value, Args...>& map, bool str_copy = true);
@@ -464,10 +463,10 @@ public:
         std::is_arithmetic<T>::value && !std::is_same<T, char>::value, T>::type* = nullptr>
     T as() const;
 
-    template<typename T, typename std::enable_if<future::is_const_char<T>::value, T>::type* = nullptr>
+    template<typename T, typename std::enable_if<detail::is_const_char<T>::value, T>::type* = nullptr>
     const char* as() const;
 
-    template<typename T, typename std::enable_if<future::is_string<T>::value, T>::type* = nullptr>
+    template<typename T, typename std::enable_if<detail::is_string<T>::value, T>::type* = nullptr>
     std::string as() const;
 
 
@@ -502,10 +501,10 @@ public:
     template<typename T, typename std::enable_if<std::is_floating_point<T>::value, T>::type* = nullptr>
     optional<T> get() const;
 
-    template<typename T, typename std::enable_if<future::is_const_char<T>::value, T>::type* = nullptr>
+    template<typename T, typename std::enable_if<detail::is_const_char<T>::value, T>::type* = nullptr>
     optional<T> get() const;
 
-    template<typename T, typename std::enable_if<future::is_string<T>::value, T>::type* = nullptr>
+    template<typename T, typename std::enable_if<detail::is_string<T>::value, T>::type* = nullptr>
     optional<T> get() const;
 
     std::string to_string(size_t MAX_LENGTH_SIZE=std::numeric_limits<size_t>::max()) const {
@@ -583,8 +582,8 @@ public:
     /// set Container ( Container<long> )
     template<template <typename...> class Container, typename...Args, typename std::enable_if<
         !std::is_same<int64_t, long>::value &&
-        future::is_iterable<Container<long, Args...>>::value &&
-        !future::is_map<Container<long, Args...>>::value
+        detail::is_iterable<Container<long, Args...>>::value &&
+        !detail::is_map<Container<long, Args...>>::value
         , Container<long, Args...>>::type* = nullptr
     >
     void set_container(const Container<long, Args...>& array, bool str_copy = true);
@@ -592,15 +591,15 @@ public:
     /// set Container ( Container<unsigned long> )
     template<template <typename...> class Container, typename...Args, typename std::enable_if<
         !std::is_same<int64_t, long>::value &&
-        future::is_iterable<Container<unsigned long, Args...>>::value &&
-        !future::is_map<Container<unsigned long, Args...>>::value
+        detail::is_iterable<Container<unsigned long, Args...>>::value &&
+        !detail::is_map<Container<unsigned long, Args...>>::value
         , Container<unsigned long, Args...>>::type* = nullptr
     >
     void set_container(const Container<unsigned long, Args...>& array, bool str_copy = true);
     /// assing from map<string, long> ( long != int64_t )
     template<template <typename...> class Container, typename...Args, typename std::enable_if<
         !std::is_same<int64_t, long>::value &&
-        future::is_map<Container<std::string, long, Args...>>::value
+        detail::is_map<Container<std::string, long, Args...>>::value
         , Container<std::string, long, Args...>>::type* = nullptr
     >
     void set_container(const Container<std::string, long, Args...>& map, bool str_copy = true);
@@ -608,7 +607,7 @@ public:
     /// assing from map<string, unsinged long> ( unsigned long != uint64_t )
     template<template <typename...> class Container, typename...Args, typename std::enable_if<
         !std::is_same<int64_t, long>::value &&
-        future::is_map<Container<std::string, unsigned long, Args...>>::value
+        detail::is_map<Container<std::string, unsigned long, Args...>>::value
         , Container<std::string, unsigned long, Args...>>::type* = nullptr
     >
     void set_container(const Container<std::string, unsigned long, Args...>& map, bool str_copy = true);
@@ -694,8 +693,8 @@ public:
     ArrayRef& operator=(const ArrayRef& other) = delete;
 
     template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_iterable<Container<T, Args...>>::value &&
-        !future::is_map<Container<T, Args...>>::value
+        detail::is_iterable<Container<T, Args...>>::value &&
+        !detail::is_map<Container<T, Args...>>::value
         , Container<T, Args...>>::type* = nullptr
     >
     ArrayRef& operator=(const Container<T, Args...>& array) {
@@ -704,8 +703,8 @@ public:
     }
 
     template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_iterable<Container<T, Args...>>::value &&
-        !future::is_map<Container<T, Args...>>::value
+        detail::is_iterable<Container<T, Args...>>::value &&
+        !detail::is_map<Container<T, Args...>>::value
         , Container<T, Args...>>::type* = nullptr
     >
     inline void set_container(const Container<T, Args...>& array, bool str_copy = true) {
@@ -861,8 +860,8 @@ protected:
 /// ValueRef::set_array template impl
 /////////////////////////////////////////////////////////////////////////////////////////////
 template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-    future::is_iterable<Container<T, Args...>>::value &&
-    !future::is_map<Container<T, Args...>>::value
+    detail::is_iterable<Container<T, Args...>>::value &&
+    !detail::is_map<Container<T, Args...>>::value
     , Container<T, Args...>>::type*
 >
 inline ArrayRef ValueRef::set_array(const Container<T, Args...>& array, bool str_copy) {
@@ -911,7 +910,7 @@ public:
 
     ObjectRef& operator=(const ObjectRef& other) = delete;
     template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_map<Container<std::string, Value, Args...>>::value
+        detail::is_map<Container<std::string, Value, Args...>>::value
         , Container<std::string, Value, Args...>>::type* = nullptr
     >
     ObjectRef& operator=(const Container<std::string, Value, Args...>& map) {
@@ -921,7 +920,7 @@ public:
 
     /// set_container map<std::string, Value>
     template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_map<Container<std::string, Value, Args...>>::value
+        detail::is_map<Container<std::string, Value, Args...>>::value
         , Container<std::string, Value, Args...>>::type* = nullptr
     >
     inline void set_container(const Container<std::string, Value, Args...>& map, bool str_copy = true) {
@@ -936,13 +935,13 @@ public:
 
     /// get_value<String>()
     template<typename T, typename std::enable_if<
-        future::is_string<T>::value, T>::type* = nullptr
+        detail::is_string<T>::value, T>::type* = nullptr
     >
     inline optional<std::string> get_value(const std::string& name) const;
 
     /// get_value<const char>()
     template<typename T, typename std::enable_if<
-        future::is_const_char<T>::value, T>::type* = nullptr
+        detail::is_const_char<T>::value, T>::type* = nullptr
     >
     inline optional<const char*> get_value(const std::string& name) const;
 
@@ -980,6 +979,7 @@ public:
         }
         return ValueRef(it->value, valueRef_.alloc_);
     }
+
     inline ValueRef operator[](const string_view& name) const {     // key not copy
         rapidjson::Value key(rapidjson::StringRef(name.data(), name.length()));
         auto it = valueRef_.value_.FindMember(key);
@@ -1001,15 +1001,15 @@ public:
     }
 
     template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_iterable<Container<std::string, Args...>>::value &&
-        !future::is_map<Container<std::string, Args...>>::value
+        detail::is_iterable<Container<std::string, Args...>>::value &&
+        !detail::is_map<Container<std::string, Args...>>::value
         , Container<std::string, Args...> >::type* = nullptr
     >
     inline MemberIterator find_any(Container<std::string> names) const;
 
     template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        future::is_iterable<Container<std::string, Args...>>::value &&
-        !future::is_map<Container<std::string, Args...>>::value
+        detail::is_iterable<Container<std::string, Args...>>::value &&
+        !detail::is_map<Container<std::string, Args...>>::value
         , Container<std::string, Args...> >::type* = nullptr
     >
     inline bool find_all(Container<std::string> names) const;
@@ -1075,6 +1075,7 @@ public:
         auto it = (valueRef_.value_.MemberEnd() - 1);
         return ValueRef(it->value, valueRef_.alloc_);
     }
+
 
     inline ValueRef insert(const string_view& name) {       // key not copy
         valueRef_.value_.AddMember(rapidjson::Value(name.data(), name.length()), rapidjson::Value(), valueRef_.alloc_);
@@ -1153,7 +1154,7 @@ T ValueRef::as() const {
     return 0;
 }
 
-template<typename T, typename std::enable_if<future::is_const_char<T>::value, T>::type*>
+template<typename T, typename std::enable_if<detail::is_const_char<T>::value, T>::type*>
 const char* ValueRef::as() const {
     if (value_.IsString()) {
         return value_.GetString();
@@ -1161,7 +1162,7 @@ const char* ValueRef::as() const {
     return nullptr;
 }
 
-template<typename T, typename std::enable_if<future::is_string<T>::value, T>::type*>
+template<typename T, typename std::enable_if<detail::is_string<T>::value, T>::type*>
 std::string ValueRef::as() const {
     if (value_.IsNumber()) {
         if (value_.IsInt()) {
@@ -1256,7 +1257,7 @@ optional<T> ValueRef::get() const {
     return res;
 }
 
-template<typename T, typename std::enable_if<future::is_const_char<T>::value, T>::type*>
+template<typename T, typename std::enable_if<detail::is_const_char<T>::value, T>::type*>
 optional<T> ValueRef::get() const {
     optional<const char*> res;
     if (value_.IsString()) {
@@ -1265,7 +1266,7 @@ optional<T> ValueRef::get() const {
     return res;
 }
 
-template<typename T, typename std::enable_if<future::is_string<T>::value, T>::type*>
+template<typename T, typename std::enable_if<detail::is_string<T>::value, T>::type*>
 optional<T> ValueRef::get() const {
     optional<std::string> res;
     if (value_.IsString()) {
@@ -1278,7 +1279,7 @@ optional<T> ValueRef::get() const {
 /// ValueRef::set_object tempalte impl
 /////////////////////////////////////////////////////////////////////////////////////////////
 template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-    future::is_map<Container<std::string, Value, Args...>>::value
+    detail::is_map<Container<std::string, Value, Args...>>::value
     , Container<std::string, Value, Args...>>::type*
 >
 ObjectRef ValueRef::set_object(const Container<std::string, Value, Args...>& map, bool str_copy) {
@@ -1292,8 +1293,8 @@ ObjectRef ValueRef::set_object(const Container<std::string, Value, Args...>& map
 
 /// set Container ( Container<Number> )
 template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-    future::is_iterable<Container<T, Args...>>::value &&
-    !future::is_map<Container<T, Args...>>::value
+    detail::is_iterable<Container<T, Args...>>::value &&
+    !detail::is_map<Container<T, Args...>>::value
     , Container<T, Args...>>::type*
 >
 inline void ValueRef::set_container(const Container<T, Args...>& array, bool str_copy)
@@ -1309,8 +1310,8 @@ inline void ValueRef::set_container(const Container<T, Args...>& array, bool str
 
 /// set Container ( Continaer<String> )
 template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    future::is_iterable<Container<std::string, Args...>>::value &&
-    !future::is_map<Container<std::string, Args...>>::value
+    detail::is_iterable<Container<std::string, Args...>>::value &&
+    !detail::is_map<Container<std::string, Args...>>::value
     , Container<std::string, Args...> >::type*
 >
 inline void ValueRef::set_container(const Container<std::string, Args...>& array, bool str_copy)
@@ -1328,7 +1329,7 @@ inline void ValueRef::set_container(const Container<std::string, Args...>& array
 
 /// assing from map<string, Value>
 template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-    future::is_map<Container<std::string, Value, Args...>>::value
+    detail::is_map<Container<std::string, Value, Args...>>::value
     , Container<std::string, Value, Args...>>::type*
 >
 inline void ValueRef::set_container(const Container<std::string, Value, Args...>& map, bool str_copy)
@@ -1348,7 +1349,7 @@ inline void ValueRef::set_container(const Container<std::string, Value, Args...>
 
 /// assign from map<string, string>
 template<template <typename...> class Container, typename std::enable_if<
-    future::is_map<Container<std::string, std::string>>::value
+    detail::is_map<Container<std::string, std::string>>::value
     , Container<std::string, std::string>>::type*
 >
 inline void ValueRef::set_container(const Container<std::string, std::string>& map, bool str_copy)
@@ -1370,8 +1371,8 @@ inline void ValueRef::set_container(const Container<std::string, std::string>& m
 /// set Container ( Container<long> )
 template<template <typename...> class Container, typename...Args, typename std::enable_if<
     !std::is_same<int64_t, long>::value &&
-    future::is_iterable<Container<long, Args...>>::value &&
-    !future::is_map<Container<long, Args...>>::value
+    detail::is_iterable<Container<long, Args...>>::value &&
+    !detail::is_map<Container<long, Args...>>::value
     , Container<long, Args...>>::type*
 >
 inline void ValueRef::set_container(const Container<long, Args...>& array, bool str_copy)
@@ -1387,8 +1388,8 @@ inline void ValueRef::set_container(const Container<long, Args...>& array, bool 
 /// set Container ( Container<unsigned long> )
 template<template <typename...> class Container, typename...Args, typename std::enable_if<
     !std::is_same<uint64_t, unsigned long>::value &&
-    future::is_iterable<Container<unsigned long, Args...>>::value &&
-    !future::is_map<Container<unsigned long, Args...>>::value
+    detail::is_iterable<Container<unsigned long, Args...>>::value &&
+    !detail::is_map<Container<unsigned long, Args...>>::value
     , Container<unsigned long, Args...>>::type*
 >
 inline void ValueRef::set_container(const Container<unsigned long, Args...>& array, bool str_copy)
@@ -1404,7 +1405,7 @@ inline void ValueRef::set_container(const Container<unsigned long, Args...>& arr
 /// assign from map<string, long>
 template<template <typename...> class Container, typename...Args, typename std::enable_if<
     !std::is_same<int64_t, long>::value &&
-    future::is_map<Container<std::string, long, Args...>>::value
+    detail::is_map<Container<std::string, long, Args...>>::value
     , Container<std::string, long, Args...>>::type*
 >
 inline void ValueRef::set_container(const Container<std::string, long, Args...>& map, bool str_copy)
@@ -1425,7 +1426,7 @@ inline void ValueRef::set_container(const Container<std::string, long, Args...>&
 /// assign from map<string, unsigned long>
 template<template <typename...> class Container, typename...Args, typename std::enable_if<
     !std::is_same<uint64_t, unsigned long>::value &&
-    future::is_map<Container<std::string, unsigned long, Args...>>::value
+    detail::is_map<Container<std::string, unsigned long, Args...>>::value
     , Container<std::string, unsigned long, Args...>>::type*
 >
 inline void ValueRef::set_container(const Container<std::string, unsigned long, Args...>& map, bool str_copy)
@@ -1461,7 +1462,7 @@ inline optional<bool> ObjectRef::get_value(const std::string& name) const {
 }
 
 template<typename T, typename std::enable_if<
-    future::is_string<T>::value, T>::type*
+    detail::is_string<T>::value, T>::type*
 >
 inline optional<std::string> ObjectRef::get_value(const std::string& name) const {
     optional<std::string> ret;
@@ -1474,7 +1475,7 @@ inline optional<std::string> ObjectRef::get_value(const std::string& name) const
 }
 
 template<typename T, typename std::enable_if<
-    future::is_const_char<T>::value, T>::type*
+    detail::is_const_char<T>::value, T>::type*
 >
 inline optional<const char*> ObjectRef::get_value(const std::string& name) const {
     optional<const char*> ret;
@@ -1502,8 +1503,8 @@ inline optional<T> ObjectRef::get_value(const std::string& name) const {
 /// ValueRef::find_xxx tempalte impl
 /////////////////////////////////////////////////////////////////////////////////////////////
 template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    future::is_iterable<Container<std::string, Args...>>::value &&
-    !future::is_map<Container<std::string, Args...>>::value
+    detail::is_iterable<Container<std::string, Args...>>::value &&
+    !detail::is_map<Container<std::string, Args...>>::value
     , Container<std::string, Args...> >::type*
 >
 inline MemberIterator ObjectRef::find_any(Container<std::string> names) const
@@ -1518,8 +1519,8 @@ inline MemberIterator ObjectRef::find_any(Container<std::string> names) const
 }
 
 template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    future::is_iterable<Container<std::string, Args...>>::value &&
-    !future::is_map<Container<std::string, Args...>>::value
+    detail::is_iterable<Container<std::string, Args...>>::value &&
+    !detail::is_map<Container<std::string, Args...>>::value
     , Container<std::string, Args...> >::type*
 >
 inline bool ObjectRef::find_all(Container<std::string> names) const
