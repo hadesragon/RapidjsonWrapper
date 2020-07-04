@@ -34,5 +34,8 @@ target_link_libraries(json_test GTest::GTest GTest::Main)
 #   $ make test
 
 enable_testing()
-add_test(NAME    json_test 
-         COMMAND json_test)
+add_test(json_test COMMAND json_test)
+
+add_custom_target(check COMMAND ./json_test)
+add_dependencies(check json_test)
+
