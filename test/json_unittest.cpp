@@ -595,7 +595,6 @@ TEST(JsonTest, set_container)
     EXPECT_EQ(exp3, doc3);
     std::cout << doc << std::endl;
 
-    // mac 과 linux 가 unordered 에서 ordering 이 다른 경우가 있으므로 입력및 출력 체크만 한다.
     std::list<bool> e = {false, false, false, true, true, true};
     std::unordered_set<unsigned long> f = {1,2,3,4,5,6,7,8,9,10};
     std::unordered_map<std::string, uint64_t> g = { {"a", 1}, {"b", 2}, {"c", 3}, {"d", 4},{"e", 5} };

@@ -408,7 +408,7 @@ public:
     bool operator==(const ValueRef& other) { return (&value_ == &other.value_); }
     bool operator!=(const ValueRef& other) { return !(operator==(other)); }
 
-    /// type = as<type> 인터페이스
+    /// type = as<type>
     template<typename T, typename std::enable_if<std::is_same<T, char>::value, T>::type* = nullptr>
     char as() const;
 
@@ -423,7 +423,7 @@ public:
     std::string as() const;
 
 
-    /// optional<type> = get<type> 인터페이스
+    /// optional<type> = get<type>
     template<typename T, typename std::enable_if<
         std::is_integral<T>::value && std::is_same<T, bool>::value, T>::type* = nullptr>
     optional<bool> get() const;
