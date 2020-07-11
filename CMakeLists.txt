@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(RapidjsonWrapper LANGUAGES CXX)
+project(wrapidjson LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 # Default FindPackage
