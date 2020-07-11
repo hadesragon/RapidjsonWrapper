@@ -10,8 +10,6 @@
 #include <fstream>
 #include <cstdio>
 
-#include <nonstd/optional.hpp>
-#include <nonstd/string_view.hpp>
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -25,6 +23,8 @@
 #include "format.h"
 #include "parse.h"
 #include "type_traits.h"
+#include "optional.hpp"
+#include "string_view.hpp"
 
 namespace Json {
 

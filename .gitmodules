@@ -1,6 +1,0 @@
-[submodule "optional-lite"]
-	path = optional-lite
-	url = https://github.com/martinmoene/optional-lite.git
-[submodule "string-view-lite"]
-	path = string-view-lite
-	url = https://github.com/martinmoene/string-view-lite.git

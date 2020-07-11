@@ -1,5 +1,5 @@
-#ifndef TYPE_TRAITS_H_
-#define TYPE_TRAITS_H_
+#ifndef WRAPIDJSON_TYPE_TRAITS_H_
+#define WRAPIDJSON_TYPE_TRAITS_H_
 
 #include <string>
 #include <map>
@@ -70,4 +70,4 @@ struct is_iterable<T, void_t<decltype(std::declval<T>().begin()),
 } // namespace detail
 } // namespace Json
 
-#endif // TYPE_TRAITS_H_
+#endif // WRAPIDJSON_TYPE_TRAITS_H_

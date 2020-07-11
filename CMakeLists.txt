@@ -13,10 +13,7 @@ include(cmake/TargetDistclean.cmake)
 
 # include
 set(GTestInclude ${source_dir}/googletest/include)
-set(OptionalInclude ${CMAKE_SOURCE_DIR}/optional-lite/include)
-set(StringViewInclude ${CMAKE_SOURCE_DIR}/string-view-lite/include)
-include_directories(${CMAKE_SOURCE_DIR} ${GTestInclude} ${RAPIDJSON_INCLUDE_DIRS} ${OptionalInclude} ${StringViewInclude})
-
+include_directories(${CMAKE_SOURCE_DIR} ${GTestInclude} ${RAPIDJSON_INCLUDE_DIRS})
 
 # excutable
 add_executable(json_test ${CMAKE_CURRENT_SOURCE_DIR}/test/json_unittest.cpp)

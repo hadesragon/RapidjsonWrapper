@@ -1,11 +1,11 @@
-#ifndef FORMAT_H_ 
-#define FORMAT_H_
+#ifndef WRAPIDJSON_FORMAT_H_ 
+#define WRAPIDJSON_FORMAT_H_
 
 #include <cstdio>
 #include <cstdlib>
 #include <string>
 
-namespace Json {
+namespace wrapidson {
 namespace detail {
 
 namespace format_helper
@@ -26,6 +26,6 @@ inline std::string format(const std::string& format, Args&& ... args)
 }
 
 } // namespace detail 
-} // namespace Json
+} // namespace wrapidjson
 
-#endif // FORMAT_H_
+#endif // WRAPIDJSON_FORMAT_H_

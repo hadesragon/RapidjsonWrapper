@@ -1,5 +1,5 @@
-#ifndef PARSE_H_ 
-#define PARSE_H_
+#ifndef WRAPIDJSON_PARSE_H_ 
+#define WRAPIDJSON_PARSE_H_
 
 #include <string>
 #include <sstream>
@@ -8,9 +8,9 @@
 #include <cstdlib>
 #include <cerrno>
 
-#include <nonstd/optional.hpp>
+#include "optional.hpp"
 
-namespace Json {
+namespace wrapidson {
 namespace detail {
 
 template<typename T>
@@ -96,6 +96,6 @@ inline T parse(const std::string& value, const T& default_value)
 }
 
 } // namespace detail
-} // namespace Json
+} // namespace wrapidson
 
-#endif // PARSE_H_
+#endif // WRAPIDJSON_PARSE_H_
