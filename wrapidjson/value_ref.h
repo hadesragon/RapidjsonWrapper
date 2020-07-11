@@ -2,15 +2,19 @@
 #define WRAPIDJSON_VALUE_REF_H
 
 #include <limits>
-#include <type_traits>
 
 #include <rapidjson/document.h>
 
 #include "string_view.hpp"
 #include "optional.hpp"
+
 #include "type_traits.h"
 
 namespace wrapidjson {
+
+template<typename T>
+using optional = nonstd::optional<T>;
+using string_view = nonstd::string_view;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Wrapper rapidjson::GenericIterators.
@@ -69,10 +73,6 @@ struct MemberRef;
 using MemberIterator = Iterator<rapidjson::Value::MemberIterator, MemberRef, rapidjson::Document::AllocatorType>;
 class ObjectRef;
 
-template<typename T>
-using optional = nonstd::optional<T>;
-using string_view = nonstd::string_view;
-
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// ValueRef for rapidjson::value
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,6 +96,36 @@ public:
     template<typename T>
     ValueRef& operator=(T value) {
         value_ = value;
+        return *this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Against long != int64_t
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    template<typename T = long>
+    ValueRef& operator=(long value) {
+        value_ = static_cast<int64_t>(value);
+        return *this;
+    }
+
+    template<typename T = unsigned long>
+    ValueRef& operator=(unsigned long value) {
+        value_ = static_cast<uint64_t>(value);
+        return *this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Against long long != int64_t
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    template<typename T = long long>
+    ValueRef& operator=(long long value) {
+        value_ = static_cast<int64_t>(value);
+        return *this;
+    }
+
+    template<typename T = unsigned long long>
+    ValueRef& operator=(unsigned long long value) {
+        value_ = static_cast<uint64_t>(value);
         return *this;
     }
 
@@ -273,17 +303,8 @@ public:
     size_t size() const;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // IF long != rapidjson::SizeType(int64_t)
+    // IF long != int64_t
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ValueRef& operator=(std::enable_if<!std::is_same<int64_t, long>::value, long>::type value) {
-        value_ = static_cast<int64_t>(value);
-        return *this;
-    }
-
-    ValueRef& operator=(std::enable_if<!std::is_same<uint64_t, unsigned long>::value, unsigned long>::type value) {
-        value_ = static_cast<uint64_t>(value);
-        return *this;
-    }
     /// set Container ( Container<long> )
     template<template <typename...> class Container, typename...Args, typename std::enable_if<
         !std::is_same<int64_t, long>::value &&
@@ -317,19 +338,9 @@ public:
     >
     void set_container(const Container<std::string, unsigned long, Args...>& map, bool str_copy = true);
 
-/*
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // IF long long != rapidjson::SizeType(int64_t)
+    // IF long long != int64_t
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ValueRef& operator=(std::enable_if<!std::is_same<int64_t, long long>::value, long long>::type value) {
-        value_ = static_cast<int64_t>(value);
-        return *this;
-    }
-
-    ValueRef& operator=(std::enable_if<!std::is_same<uint64_t, unsigned long long>::value, unsigned long long>::type value) {
-        value_ = static_cast<uint64_t>(value);
-        return *this;
-    }
     /// set Container ( Container<long long> )
     template<template <typename...> class Container, typename...Args, typename std::enable_if<
         !std::is_same<int64_t, long long>::value &&
@@ -362,7 +373,6 @@ public:
         , Container<std::string, unsigned long long, Args...>>::type* = nullptr
     >
     void set_container(const Container<std::string, unsigned long long, Args...>& map, bool str_copy = true);
-*/
 
 protected:
     rapidjson::Value&                   value_;
