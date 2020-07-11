@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <string>
 
-namespace wrapidson {
+namespace wrapidjson {
 namespace detail {
 
 namespace format_helper

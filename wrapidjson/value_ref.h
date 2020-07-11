@@ -8,16 +8,65 @@
 
 #include "string_view.hpp"
 #include "optional.hpp"
+#include "type_traits.h"
 
-namespace wrapidson {
+namespace wrapidjson {
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// Wrapper rapidjson::GenericIterators.
+/////////////////////////////////////////////////////////////////////////////////////////////
+template <typename IteratorType, typename ReferenceType, typename AllocatorType>
+class Iterator : public std::iterator<std::forward_iterator_tag, ReferenceType, ReferenceType, const ReferenceType*, ReferenceType> {
+    friend class ArrayRef;
+    friend class ObjectRef;
+public:
+    Iterator(IteratorType ptr, AllocatorType& allocator)
+        : ptr_(ptr), alloc_(&allocator) {}
+    Iterator(const Iterator& rfs)
+        : ptr_(rfs.ptr_), alloc_(rfs.alloc_) {}
+    ~Iterator() = default;
+
+    Iterator& operator=(const Iterator& other){ptr_ = other.ptr_; alloc_ = other.alloc_; return *this;}
+
+    Iterator& operator++(){ ++ptr_; return *this; }                         // ++itr
+    Iterator& operator--(){ --ptr_; return *this; }                         // --itr
+    Iterator  operator++(int){ Iterator old(*this); ++ptr_; return old; }   // itr++
+    Iterator  operator--(int){ Iterator old(*this); --ptr_; return old; }   // itr--
+
+    Iterator operator+(int n) const { return Iterator(ptr_+n, *alloc_); }   // itr +
+    Iterator operator-(int n) const { return Iterator(ptr_-n, *alloc_); }   // itr -
+
+    Iterator& operator+=(int n) { ptr_+=n; return *this; }                  // itr +=
+    Iterator& operator-=(int n) { ptr_-=n; return *this; }                  // itr -=
+
+    bool operator==(const Iterator& rfs) const { return ptr_ == rfs.ptr_; }
+    bool operator!=(const Iterator& rfs) const { return ptr_ != rfs.ptr_; }
+    bool operator<=(const Iterator& rfs) const { return ptr_ <= rfs.ptr_; }
+    bool operator>=(const Iterator& rfs) const { return ptr_ >= rfs.ptr_; }
+    bool operator< (const Iterator& rfs) const { return ptr_ < rfs.ptr_; }
+    bool operator> (const Iterator& rfs) const { return ptr_ > rfs.ptr_; }
+    int  operator- (const Iterator& rfs) const { return ptr_ - rfs.ptr_; }
+
+    ReferenceType operator*() const { return ReferenceType(*ptr_, *alloc_); }
+    ReferenceType operator->() const { return ReferenceType(*ptr_, *alloc_); }
+    ReferenceType operator[](size_t n) const { return ReferenceType(ptr_[n], *alloc_); }
+
+private:
+    IteratorType    ptr_;
+    AllocatorType*  alloc_;
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Predefine class 
 /////////////////////////////////////////////////////////////////////////////////////////////
-class ValueIterator;
+class ValueRef;
+class Document;
+
+using ValueIterator = Iterator<rapidjson::Value::ValueIterator, ValueRef, rapidjson::Document::AllocatorType>;
 class ArrayRef;
 
-class MemberIterator;
+struct MemberRef;
+using MemberIterator = Iterator<rapidjson::Value::MemberIterator, MemberRef, rapidjson::Document::AllocatorType>;
 class ObjectRef;
 
 template<typename T>
@@ -34,15 +83,15 @@ class ValueRef {
 public:
     /// constructors:
     ValueRef(rapidjson::Value&, rapidjson::Document::AllocatorType&);
-    explicit ValueRef(const ValueRef&);
-    explicit ValueRef(const ArrayRef&);
-    explicit ValueRef(const ObjectRef&);
+    ValueRef(const ValueRef&);
+    ValueRef(const ArrayRef&);
+    ValueRef(const ObjectRef&);
 
     /// destructor
     virtual ~ValueRef() = default;
 
     /// copy assignment
-    ValueRef& operator=(const ValueRef& other);
+    ValueRef& operator=(const ValueRef&);
 
     template<typename T>
     ValueRef& operator=(T value) {
@@ -211,10 +260,11 @@ public:
     template<typename T, typename std::enable_if<detail::is_string<T>::value, T>::type* = nullptr>
     optional<T> get() const;
 
-    std::string to_string(size_t MAX_LENGTH_SIZE=std::numeric_limits<size_t>::max()) const;
-    rapidjson::Value& get_rvalue() const;
+    ValueRef get_ref() const;
     ArrayRef get_array() const;
     ObjectRef get_object() const;
+
+    rapidjson::Value& get_rvalue() const;
 
     ValueRef* operator->() { return this; } // for iterator
 
@@ -267,6 +317,7 @@ public:
     >
     void set_container(const Container<std::string, unsigned long, Args...>& map, bool str_copy = true);
 
+/*
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // IF long long != rapidjson::SizeType(int64_t)
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -311,6 +362,7 @@ public:
         , Container<std::string, unsigned long long, Args...>>::type* = nullptr
     >
     void set_container(const Container<std::string, unsigned long long, Args...>& map, bool str_copy = true);
+*/
 
 protected:
     rapidjson::Value&                   value_;
@@ -324,8 +376,8 @@ class ArrayRef {
     friend class ValueRef;
 
 public:
-    explicit ArrayRef(const ArrayRef&);
-    explicit ArrayRef(const ValueRef& value);
+    ArrayRef(const ArrayRef&);
+    ArrayRef(const ValueRef& value);
     ArrayRef& operator=(const ArrayRef& other) = delete;
 
     ~ArrayRef() = default;
@@ -375,7 +427,6 @@ public:
     ValueIterator erase(const ValueIterator& pos);
     ValueIterator erase(const ValueIterator& first, const ValueIterator& last);
 
-    std::string to_string() const;
     ValueRef get_value_ref() const;
 
 protected:
@@ -483,14 +534,12 @@ public:
     MemberIterator erase(const MemberIterator& pos);
     MemberIterator erase(const MemberIterator& first, const MemberIterator& last);
 
-    std::string to_string() const;
-
     ValueRef get_value_ref() const;
 protected:
     ValueRef valueRef_;
 };
 
-} // namespace wrapidson
+} // namespace wrapidjson
 
 #include "value_ref_impl.h"
 

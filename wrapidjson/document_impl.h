@@ -12,7 +12,7 @@
 #include <rapidjson/error/en.h>
 #include <rapidjson/error/error.h>
 
-namespace wrapidson {
+namespace wrapidjson {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// std::istream wrapper
@@ -154,4 +154,4 @@ inline bool Document::save_to_stream(std::ostream& os, bool pretty) {
     }
 }
 
-} // namespace
+} // namespace wrapidjson

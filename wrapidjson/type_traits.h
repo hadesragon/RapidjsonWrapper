@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <type_traits>
 
-namespace Json {
+namespace wrapidjson {
 namespace detail {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,6 +68,6 @@ struct is_iterable<T, void_t<decltype(std::declval<T>().begin()),
     : std::true_type {};
 
 } // namespace detail
-} // namespace Json
+} // namespace wrapidjson
 
 #endif // WRAPIDJSON_TYPE_TRAITS_H_

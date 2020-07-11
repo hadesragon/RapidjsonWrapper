@@ -1,3 +1,6 @@
+#include "format.h"
+#include "parse.h"
+
 namespace wrapidjson {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -10,11 +13,11 @@ inline ValueRef::ValueRef(const ValueRef& rfs)
     : value_(rfs.value_), alloc_(rfs.alloc_)
 {}
 inline ValueRef::ValueRef(const ArrayRef& array)
-    : value_(array.get_valueref().value_), alloc_(array.get_valueref().alloc_)
+    : value_(array.get_value_ref().value_), alloc_(array.get_value_ref().alloc_)
 {}
 
 inline ValueRef::ValueRef(const ObjectRef& obj)
-    : value_(obj.get_valueref().value_), alloc_(obj.get_valueref().alloc_)
+    : value_(obj.get_value_ref().value_), alloc_(obj.get_value_ref().alloc_)
 {}
 
 /// copy assignment
@@ -112,36 +115,11 @@ inline optional<ValueRef> ValueRef::find(const std::string& name) const {
     return ret;
 }
 
-inline std::string ValueRef::to_string(size_t MAX_LENGTH_SIZE) const {
-    if (value_.IsNull()) {
-        return "Null";
-    } else if (value_.IsNumber()) {
-        if (value_.IsInt()) {
-            return std::to_string(value_.GetInt());
-        } else if (value_.IsUint()) {
-            return std::to_string(value_.GetUint());
-        } else if (value_.IsInt64()) {
-            return std::to_string(value_.GetInt64());
-        } else if (value_.IsUint64()) {
-            return std::to_string(value_.GetUint64());
-        } else if (value_.IsDouble()) {
-            return std::to_string(value_.GetDouble());
-        }
-    } else if (value_.IsBool()) {
-        return (value_.GetBool() ? "true" : "false");
-    } else {
-        std::string str;
-        Value value(*this);
-        value.save_to_buffer(str);
-        if ( str.size() > MAX_LENGTH_SIZE ) {
-            str = str.substr(0, MAX_LENGTH_SIZE) + "...";
-        }
-        return str;
-    }
-    return "";
-}
 inline rapidjson::Value& ValueRef::get_rvalue() const {
     return value_;
+}
+inline ValueRef ValueRef::get_ref() const {
+    return *this;
 }
 inline ArrayRef ValueRef::get_array() const {
     return ArrayRef(*this);
@@ -149,6 +127,7 @@ inline ArrayRef ValueRef::get_array() const {
 inline ObjectRef ValueRef::get_object() const {
     return ObjectRef(*this);
 }
+
 inline bool ValueRef::empty() const {
     if ( value_.IsObject() ) {
         return value_.ObjectEmpty();
@@ -498,6 +477,7 @@ inline void ValueRef::set_container(const Container<std::string, unsigned long, 
     }
 }
 
+/*
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // long long != rapidjson::SizeType(int64_t)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -576,50 +556,7 @@ inline void ValueRef::set_container(const Container<std::string, unsigned long l
         value_.AddMember(name.Move(), value.Move(), alloc_);
     }
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// Wrapper rapidjson::GenericIterators.
-/////////////////////////////////////////////////////////////////////////////////////////////
-template <typename IteratorType, typename ReferenceType, typename AllocatorType>
-class Iterator : public std::iterator<std::forward_iterator_tag, ReferenceType, ReferenceType, const ReferenceType*, ReferenceType> {
-    friend class ArrayRef;
-    friend class ObjectRef;
-public:
-    Iterator(IteratorType ptr, AllocatorType& allocator)
-        : ptr_(ptr), alloc_(&allocator) {}
-    Iterator(const Iterator& rfs)
-        : ptr_(rfs.ptr_), alloc_(rfs.alloc_) {}
-    ~Iterator() = default;
-
-    Iterator& operator=(const Iterator& other){ptr_ = other.ptr_; alloc_ = other.alloc_; return *this;}
-
-    Iterator& operator++(){ ++ptr_; return *this; }                         // ++itr
-    Iterator& operator--(){ --ptr_; return *this; }                         // --itr
-    Iterator  operator++(int){ Iterator old(*this); ++ptr_; return old; }   // itr++
-    Iterator  operator--(int){ Iterator old(*this); --ptr_; return old; }   // itr--
-
-    Iterator operator+(int n) const { return Iterator(ptr_+n, *alloc_); }   // itr +
-    Iterator operator-(int n) const { return Iterator(ptr_-n, *alloc_); }   // itr -
-
-    Iterator& operator+=(int n) { ptr_+=n; return *this; }                  // itr +=
-    Iterator& operator-=(int n) { ptr_-=n; return *this; }                  // itr -=
-
-    bool operator==(const Iterator& rfs) const { return ptr_ == rfs.ptr_; }
-    bool operator!=(const Iterator& rfs) const { return ptr_ != rfs.ptr_; }
-    bool operator<=(const Iterator& rfs) const { return ptr_ <= rfs.ptr_; }
-    bool operator>=(const Iterator& rfs) const { return ptr_ >= rfs.ptr_; }
-    bool operator< (const Iterator& rfs) const { return ptr_ < rfs.ptr_; }
-    bool operator> (const Iterator& rfs) const { return ptr_ > rfs.ptr_; }
-    int  operator- (const Iterator& rfs) const { return ptr_ - rfs.ptr_; }
-
-    ReferenceType operator*() const { return ReferenceType(*ptr_, *alloc_); }
-    ReferenceType operator->() const { return ReferenceType(*ptr_, *alloc_); }
-    ReferenceType operator[](size_t n) const { return ReferenceType(ptr_[n], *alloc_); }
-
-private:
-    IteratorType    ptr_;
-    AllocatorType*  alloc_;
-};
+*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Member Reference for ObjectIterator
@@ -642,13 +579,6 @@ struct MemberRef {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-/// Typedef Iterators.
-/////////////////////////////////////////////////////////////////////////////////////////////
-using ValueIterator = Iterator<rapidjson::Value::ValueIterator, ValueRef, rapidjson::Document::AllocatorType>;
-using MemberIterator = Iterator<rapidjson::Value::MemberIterator, MemberRef, rapidjson::Document::AllocatorType>;
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////
 /// ArrayRef ( Reference Value for array )
 /////////////////////////////////////////////////////////////////////////////////////////////
 inline ArrayRef::ArrayRef(const ArrayRef& rfs)
@@ -657,13 +587,10 @@ inline ArrayRef::ArrayRef(const ArrayRef& rfs)
 inline ArrayRef::ArrayRef(const ValueRef& value)
     : valueRef_(value)
 {
-    static const size_t STRING_MAX_SIZE = 15;
     if ( valueRef_.value_.IsNull() ) {
         valueRef_.value_.SetArray();
     } else if ( not valueRef_.value_.IsArray() ) {
-        throw std::runtime_error(
-                detail::format("Value(%s) is not arrayType, ArrayRef must derived by arrayType",
-                value.to_string(STRING_MAX_SIZE)));
+        throw std::runtime_error("Value is not arrayType, ArrayRef must derived by arrayType");
     }
 }
 
@@ -781,7 +708,7 @@ inline optional<std::vector<T>> ArrayRef::get_vector()
         if ( value_ ) {
             res.emplace_back(std::move(*value_));
         } else {
-            return vector;
+            return result;
         }
     }
     result = res;
@@ -830,9 +757,6 @@ inline ValueIterator ArrayRef::erase(const ValueIterator& first, const ValueIter
     return ValueIterator(valueRef_.value_.Erase(first.ptr_, last.ptr_), valueRef_.alloc_);
 }
 
-inline std::string ArrayRef::to_string() const {
-    return valueRef_.to_string();
-}
 inline ValueRef ArrayRef::get_value_ref() const {
     return valueRef_;
 }
@@ -844,7 +768,7 @@ inline ObjectRef::ObjectRef(const ValueRef& value)
     if ( valueRef_.value_.IsNull() ) {
         valueRef_.value_.SetObject();
     } else if ( not valueRef_.value_.IsObject() ) {
-        throw std::runtime_error(detail::format("Value(%s) is not ObjectType, ObjectRef must derived by ObjectType", valueRef_.to_string(STRING_MAX_SIZE)));
+        throw std::runtime_error("Value is not ObjectType, ObjectRef must derived by ObjectType");
     }
 }
 
@@ -852,7 +776,6 @@ inline ObjectRef::ObjectRef(const ObjectRef& rfs)
     : valueRef_(rfs.valueRef_)
 {}
 
-ObjectRef& operator=(const ObjectRef& other) = delete;
 template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
     detail::is_map<Container<std::string, Value, Args...>>::value
     , Container<std::string, Value, Args...>>::type*
@@ -998,10 +921,6 @@ inline MemberIterator ObjectRef::erase(const MemberIterator& pos) {
 
 inline MemberIterator ObjectRef::erase(const MemberIterator& first, const MemberIterator& last) {
     return MemberIterator(valueRef_.value_.EraseMember(first.ptr_, last.ptr_), valueRef_.alloc_);
-}
-
-inline std::string ObjectRef::to_string() const {
-    return valueRef_.to_string();
 }
 
 inline ValueRef ObjectRef::get_value_ref() const {

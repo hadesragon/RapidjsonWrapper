@@ -10,7 +10,7 @@
 
 #include "optional.hpp"
 
-namespace wrapidson {
+namespace wrapidjson {
 namespace detail {
 
 template<typename T>
@@ -96,6 +96,6 @@ inline T parse(const std::string& value, const T& default_value)
 }
 
 } // namespace detail
-} // namespace wrapidson
+} // namespace wrapidjson
 
 #endif // WRAPIDJSON_PARSE_H_

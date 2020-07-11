@@ -7,9 +7,9 @@
 
 #include <gtest/gtest.h>
 
-#include "json/json_value.h"
+#include "wrapidjson/document.h"
 
-TEST(JsonTest, ucs4)
+TEST(wrapidjsonTest, ucs4)
 {
     std::string json = R"({"content":"\uD83C\uDFAF"})";
     char expected[] = "🎯";
@@ -18,7 +18,7 @@ TEST(JsonTest, ucs4)
     expected[2] = 0x8E;
     expected[3] = 0xAF;
 
-    Json::Value value;
+    wrapidjson::Document value;
     ASSERT_TRUE(value.load_from_buffer(json));
     EXPECT_EQ(expected, value["content"].as<std::string>());
 
@@ -26,7 +26,7 @@ TEST(JsonTest, ucs4)
     std::map<std::string, double> irf_score_map;
 
     ASSERT_TRUE(value.load_from_buffer(irf_json));
-    for ( const Json::ArrayRef arr2 : value.get_array() ) {
+    for ( const wrapidjson::ArrayRef arr2 : value.get_array() ) {
         if (arr2.size() == 2) {
             const char* docid = arr2[0].as<const char*>();
             irf_score_map[docid] = arr2[1].as<double>();
@@ -38,9 +38,9 @@ TEST(JsonTest, ucs4)
     EXPECT_EQ(5742, irf_score_map["id3"]);
 }
 
-TEST(JsonTest, assign_basic)
+TEST(wrapidjsonTest, assign_basic)
 {
-    Json::Value value;
+    wrapidjson::Document value;
     value["1000"] = 1000;
     value["1000s"] = "1000";
     EXPECT_EQ(value["1000"].as<uint64_t>(), 1000u);
@@ -49,26 +49,26 @@ TEST(JsonTest, assign_basic)
     EXPECT_EQ(value["1000s"].as<std::string>(), "1000");
 }
 
-TEST(JsonTest, jsoncpp_format)
+TEST(wrapidjsonTest, document_copy)
 {
     std::string result;
     {
-        Json::Value value, array, object;
+        wrapidjson::Document value, array_doc, object_doc; 
 
-        std::vector<std::string> a = {"a","b","c","d","e"};
-        array = a;
+        array_doc.set_container(std::vector<std::string>{"a","b","c","d","e"});
+        object_doc.set_container(std::unordered_map<std::string, int64_t>{ {"a",1}, {"b",1}, {"c",3} });
 
-        std::unordered_map<std::string, int64_t> b = { {"a",1}, {"b",1}, {"c",3} };
-        object = b;
+        auto array = array_doc.get_array();
+        auto object = object_doc.get_object();
 
-        value["array"] = array;
-        value["object"] = object;
-        value["array1"] = array;
-        value["object1"] = object;
-        value["array2"] = array;
-        value["object2"] = object;
-        value["array3"] = array;
-        value["object3"] = object;
+        value["array"] = array;         // copy
+        value["object"] = object;       // copy
+        value["array1"] = array;        // copy
+        value["object1"] = object;      // copy
+        value["array2"] = array;        // copy
+        value["object2"] = object;      // copy
+        value["array3"] = array;        // copy
+        value["object3"] = object;      // copy
 
         value.save_to_buffer(result);
 
@@ -76,7 +76,7 @@ TEST(JsonTest, jsoncpp_format)
     }
 
     {
-        Json::Value value;
+        wrapidjson::Document value;
         value.load_from_buffer(result);
         EXPECT_EQ(value.size(), 8u);
         EXPECT_TRUE(value.is_object());
@@ -100,9 +100,9 @@ TEST(JsonTest, jsoncpp_format)
     }
 }
 
-TEST(JsonTest, json_format_error)
+TEST(wrapidjsonTest, json_format_error)
 {
-    Json::Document doc;
+    wrapidjson::Document doc;
     EXPECT_TRUE(doc.load_from_buffer(R"("")"));
     EXPECT_EQ(doc.get_load_error(), "Error offset[0]: No error.");
 
@@ -142,13 +142,12 @@ TEST(JsonTest, json_format_error)
 #endif
 }
 
-TEST(JsonTest, rapidjson_format)
+TEST(wrapidjsonTest, rapidjson_format)
 {
     std::string result;
     {
         // SET
-        Json::Document doc;
-        Json::ValueRef root = doc.get_root();
+        wrapidjson::Document root;
 
         std::vector<std::string> a = {"a","b","c","d","e"};
         std::map<std::string, int64_t> b = { {"a",1}, {"b",2}, {"c",3} };
@@ -156,52 +155,52 @@ TEST(JsonTest, rapidjson_format)
         root["array"] = a;
         root["object"] = b;
 
-        Json::ArrayRef array = root["array"];
+        wrapidjson::ArrayRef array = root["array"];
 
         array.push_back("f");                   // str copy
         array.push_back("g");                   // str copy
-        Json::ValueRef item_h = array.push_back();
+        wrapidjson::ValueRef item_h = array.push_back();
         item_h = "h";                           // str copy
-        Json::ValueRef item_i = array.push_back();
-        item_i.setValue(Json::string_view("i")); // str no copy
+        wrapidjson::ValueRef item_i = array.push_back();
+        item_i.setValue(wrapidjson::string_view("i")); // str no copy
 
-        Json::ObjectRef object = root["object"];
+        wrapidjson::ObjectRef object = root["object"];
         object["d"] = 4;                    // copy
         object[std::string("e")] = 5;       // copy
-        object[Json::string_view("f")] = 6; // no copy
+        object[wrapidjson::string_view("f")] = 6; // no copy
 
-        Json::ValueRef g = object.insert("g");
+        wrapidjson::ValueRef g = object.insert("g");
         g = "g";
-        Json::ValueRef h = object.insert(std::string("h"));
+        wrapidjson::ValueRef h = object.insert(std::string("h"));
         std::string h_str = "h";
-        h = Json::string_view(h_str.data(), h_str.length());
+        h = wrapidjson::string_view(h_str.data(), h_str.length());
         std::string i = "itest";
-        object.insert(Json::string_view("i"), i);
+        object.insert(wrapidjson::string_view("i"), i);
 
         std::set<int> c = {1,2,3,4,5,6};
         std::map<std::string, std::string> d = { {"a","1"}, {"b","1"}, {"c","3"} };
 
-        Json::ArrayRef array1 = root["array1"];
+        wrapidjson::ArrayRef array1 = root["array1"];
         array1 = c;
-        Json::ObjectRef object1 = root["object1"];
+        wrapidjson::ObjectRef object1 = root["object1"];
         object1 = d;
 
-        doc.save_to_buffer(result);
-        std::cout << doc << std::endl;
-        doc.get_root().set_null();
+        root.save_to_buffer(result);
+        std::cout << result << std::endl;
+        root.set_null();
     }
 
     {
         // GET
-        Json::Document doc;
-        doc.load_from_buffer(result);
-        Json::ValueRef root = doc.get_root();
+        wrapidjson::Document root;
+        root.load_from_buffer(result);
+
         EXPECT_TRUE(root.is_object());
         EXPECT_TRUE(root["object"].is_object());
         EXPECT_TRUE(root["array"].is_array());
 
-        EXPECT_THROW(Json::ArrayRef array = root["object"], std::exception);
-        Json::ObjectRef object = root["object"];
+        EXPECT_THROW(wrapidjson::ArrayRef array = root["object"], std::exception);
+        wrapidjson::ObjectRef object = root["object"];
         EXPECT_EQ(object.size(), 9u);
         EXPECT_EQ(object["a"].as<int>(), 1);
         EXPECT_EQ(object["b"].as<int>(), 2);
@@ -210,8 +209,8 @@ TEST(JsonTest, rapidjson_format)
         EXPECT_EQ(object["e"].as<int>(), 5);
         EXPECT_EQ(object["f"].as<int>(), 6);
 
-        EXPECT_THROW(Json::ObjectRef object = root["array"], std::exception);
-        Json::ArrayRef array = root["array"];
+        EXPECT_THROW(wrapidjson::ObjectRef object = root["array"], std::exception);
+        wrapidjson::ArrayRef array = root["array"];
         EXPECT_EQ(array.size(), 9u);
         EXPECT_EQ(array[0].as<std::string>(), "a");
         EXPECT_EQ(array[1].as<std::string>(), "b");
@@ -222,17 +221,16 @@ TEST(JsonTest, rapidjson_format)
         EXPECT_EQ(array[6].as<std::string>(), "g");
         EXPECT_EQ(array[7].as<std::string>(), "h");
         EXPECT_EQ(array[8].as<std::string>(), "i");
-        doc.get_root().set_null();
+        root.set_null();
     }
 }
 
-TEST(JsonTest, json_get)
+TEST(wrapidjsonTest, json_get)
 {
     std::string result;
     {
         // SET
-        Json::Document doc;
-        Json::ObjectRef obj = doc.get_root();
+        wrapidjson::Document obj;
 
         obj["char_i"] = 44;
         obj["char_c"] = "A";
@@ -270,21 +268,21 @@ TEST(JsonTest, json_get)
         obj["double+"] = 922337203685477.5806;
         obj["doubles"] = "922337203685477.5806";
 
-        doc.save_to_buffer(result);
-        std::cout << doc << std::endl;
-        doc.get_root().set_null();
+        obj.save_to_buffer(result);
+        std::cout << result << std::endl;
+        obj.set_null();
     }
 
     {
         // GET
-        Json::Document doc;
+        wrapidjson::Document doc;
         doc.load_from_buffer(result);
-        EXPECT_TRUE(doc.get_root().is_object());
-        EXPECT_FALSE(doc.get_root().is_null());
-        EXPECT_FALSE(doc.get_root().is_array());
-        EXPECT_FALSE(doc.get_root().empty());
+        EXPECT_TRUE(doc.is_object());
+        EXPECT_FALSE(doc.is_null());
+        EXPECT_FALSE(doc.is_array());
+        EXPECT_FALSE(doc.empty());
 
-        Json::ObjectRef object = doc.get_root();
+        wrapidjson::ObjectRef object = doc;
         EXPECT_EQ(object.size(), 28u);
 
         EXPECT_FALSE(object["char_i"].get<char>());
@@ -378,49 +376,9 @@ TEST(JsonTest, json_get)
     }
 }
 
-/*
-TEST(JsonTest, query_test)
+TEST(wrapidjsonTest, json_merge)
 {
-    Json::Document doc;
-    Json::ValueRef root = doc.get_root();
-    std::vector<std::string> a = {"a","b","c","d","e"};
-    std::unordered_map<std::string, int64_t> b = { {"a",1}, {"b",1}, {"c",3} };
-
-    root["object"]["array1"] = a;
-    root["obj"]=b;
-    root["obj"]["d"]=a;
-
-    auto q1 = root.query("object");
-    auto n1 = root["object"];
-    EXPECT_TRUE(*q1 == n1);
-    EXPECT_TRUE(q1->is_object());
-    EXPECT_TRUE(n1.is_object());
-
-    auto q2 = root.query("object.122");   // not create empty 122
-    auto n2 = root["object"]["122"];      // create empty 122
-    EXPECT_FALSE(q2);
-    EXPECT_TRUE(n2.is_null());
-
-    auto q3 = root.query("obj.a");
-    auto n3 = root["obj"]["a"];
-    EXPECT_TRUE(*q3 == n3);
-    EXPECT_TRUE(q3->is_number());
-    EXPECT_TRUE(n3.is_number());
-
-    auto q4 = root.query("obj.d.[2]");
-    auto n4 = root["obj"]["d"][2];
-    EXPECT_TRUE(*q4 == n4);
-    EXPECT_TRUE(n4.is_string());
-    EXPECT_TRUE(q4->is_string());
-    EXPECT_EQ(n4.as<std::string>(), "c");
-    EXPECT_EQ(q4->as<std::string>(), "c");
-}
-*/
-
-TEST(JsonTest, json_merge)
-{
-    Json::Document doc;
-    Json::ValueRef root = doc.get_root();
+    wrapidjson::Document root;
 
     std::vector<std::string> a = {"a","b","c","d","e"};
     std::set<int> b = {1,2,3,4,5,6};
@@ -431,21 +389,22 @@ TEST(JsonTest, json_merge)
     root["b"] = b;
     root["c"] = c;
     root["d"] = d;
-    root["e"] = Json::Value(R"({"a1":["a","b","c","d","e"],"b2":[1,2,3,4,5,6],"c2":{"a":1,"b":2,"c":3},"d2":{"a":"1","b":"2","c":"3"}})");
+
+    wrapidjson::Document add(R"({"a1":["a","b","c","d","e"],"b2":[1,2,3,4,5,6],"c2":{"a":1,"b":2,"c":3},"d2":{"a":"1","b":"2","c":"3"}})");
+    root["e"] = add.get_ref();
 
     std::string res;
-    std::cout << doc << std::endl;
-    doc.save_to_buffer(res);
+    root.save_to_buffer(res);
+    std::cout << res << std::endl;
     std::string exp = R"({"a":["a","b","c","d","e"],"b":[1,2,3,4,5,6],"c":{"a":1,"b":2,"c":3},"d":{"a":"1","b":"2","c":"3"},"e":{"a1":["a","b","c","d","e"],"b2":[1,2,3,4,5,6],"c2":{"a":1,"b":2,"c":3},"d2":{"a":"1","b":"2","c":"3"}}})";
     EXPECT_EQ(res, exp);
 }
 
-TEST(JsonTest, object_test)
+TEST(wrapidjsonTest, object_test)
 {
     std::string res;
     {
-        Json::Document doc;
-        Json::ValueRef root = doc.get_root();
+        wrapidjson::Document root;
 
         std::map<std::string, int64_t> a = { {"a",-1}, {"b",-2}, {"c",-3} };
         std::map<std::string, uint32_t> b = { {"a",1}, {"b",2}, {"c",3} };
@@ -459,16 +418,14 @@ TEST(JsonTest, object_test)
         root["d"] = d;
         root["e"] = e;
 
-        std::cout << doc << std::endl;
-        doc.save_to_buffer(res);
-        doc.get_root().set_null();
+        root.save_to_buffer(res);
+        std::cout << res << std::endl;
+        root.set_null();
     }
 
     {
-        Json::Document doc;
-        doc.load_from_buffer(res);
-
-        Json::ValueRef root = doc.get_root();
+        wrapidjson::Document root;
+        root.load_from_buffer(res);
 
         // object get function
         EXPECT_FALSE(root["a"].get_object().get_value<int64_t>("d"));
@@ -494,10 +451,9 @@ TEST(JsonTest, object_test)
 }
 
 
-TEST(JsonTest, array_test)
+TEST(wrapidjsonTest, array_test)
 {
-    Json::Document doc;
-    Json::ValueRef root = doc.get_root();
+    wrapidjson::Document root;
 
     std::vector<std::string> a = {"a","b","c","d","e"};
     std::vector<int64_t> b = {1,2,3,4,5,6};
@@ -548,10 +504,9 @@ TEST(JsonTest, array_test)
     EXPECT_EQ(b_.size(), 18u);
 }
 
-TEST(JsonTest, set_container)
+TEST(wrapidjsonTest, set_container)
 {
-    Json::Document doc;
-    Json::ValueRef root = doc.get_root();
+    wrapidjson::Document root;
 
     std::vector<std::string> a = {"a","b","c","d","e"};
     std::set<long> b = {1,2,3,4,5,6};
@@ -566,10 +521,10 @@ TEST(JsonTest, set_container)
     root["b2"] = b2;
     std::string exp1 = R"({"a":["a","b","c","d","e"],"b":[1,2,3,4,5,6],"c":{"a":1,"b":2,"c":3},"d":{"a":"1","b":"2","c":"3"},"b2":[1,2,3,4,5,6]})";
     std::string doc1;
-    doc.save_to_buffer(doc1);
+    root.save_to_buffer(doc1);
     EXPECT_EQ(exp1, doc1);
 
-    std::cout << doc << std::endl;
+    std::cout << doc1 << std::endl;
 
     root["a1"].set_container(a);
     root["b1"].set_container(b);
@@ -579,9 +534,9 @@ TEST(JsonTest, set_container)
 
     std::string exp2 = R"({"a":["a","b","c","d","e"],"b":[1,2,3,4,5,6],"c":{"a":1,"b":2,"c":3},"d":{"a":"1","b":"2","c":"3"},"b2":[1,2,3,4,5,6],"a1":["a","b","c","d","e"],"b1":[1,2,3,4,5,6],"c1":{"a":1,"b":2,"c":3},"d1":{"a":"1","b":"2","c":"3"},"b12":[1,2,3,4,5,6]})";
     std::string doc2;
-    doc.save_to_buffer(doc2);
+    root.save_to_buffer(doc2);
     EXPECT_EQ(exp2, doc2);
-    std::cout << doc << std::endl;
+    std::cout << doc2 << std::endl;
 
     root["a2"].set_container(a, false);  // string not copy
     root["b2"].set_container(b, false);  // just copy ( number )
@@ -591,9 +546,9 @@ TEST(JsonTest, set_container)
 
     std::string exp3 = R"({"a":["a","b","c","d","e"],"b":[1,2,3,4,5,6],"c":{"a":1,"b":2,"c":3},"d":{"a":"1","b":"2","c":"3"},"b2":[1,2,3,4,5,6],"a1":["a","b","c","d","e"],"b1":[1,2,3,4,5,6],"c1":{"a":1,"b":2,"c":3},"d1":{"a":"1","b":"2","c":"3"},"b12":[1,2,3,4,5,6],"a2":["a","b","c","d","e"],"c2":{"a":1,"b":2,"c":3},"d2":{"a":"1","b":"2","c":"3"},"b22":[1,2,3,4,5,6]})";
     std::string doc3;
-    doc.save_to_buffer(doc3);
+    root.save_to_buffer(doc3);
     EXPECT_EQ(exp3, doc3);
-    std::cout << doc << std::endl;
+    std::cout << doc3 << std::endl;
 
     std::list<bool> e = {false, false, false, true, true, true};
     std::unordered_set<unsigned long> f = {1,2,3,4,5,6,7,8,9,10};
@@ -606,7 +561,6 @@ TEST(JsonTest, set_container)
     root["f2"] = f2;
 
     EXPECT_EQ(root.size(), 18u);
-    std::cout << doc << std::endl;
 
     root["e1"].set_container(e);
     root["f1"].set_container(f);
@@ -614,7 +568,6 @@ TEST(JsonTest, set_container)
     root["f12"].set_container(f2);
 
     EXPECT_EQ(root.size(), 22u);
-    std::cout << doc << std::endl;
 
     root["e2"].set_container(e, false);  // just copy
     root["f2"].set_container(f, false);  // just copy
@@ -622,13 +575,12 @@ TEST(JsonTest, set_container)
     root["f22"].set_container(f2, false);  // just copy
 
     EXPECT_EQ(root.size(), 25u);
-    std::cout << doc << std::endl;
 }
 
-TEST(JsonTest, find_test)
+TEST(wrapidjsonTest, find_test)
 {
-    Json::Document doc;
-    Json::ObjectRef root = doc.get_root();
+    wrapidjson::Document doc;
+    auto root = doc.get_object();
 
     root["TEST2"] = "11111";
     root["TEST4"] = "22222";
