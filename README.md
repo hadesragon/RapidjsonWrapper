@@ -189,6 +189,8 @@ int main() {
 * Wrapping Map Function
 ~~~~~~~~~~cpp
 #include "wrapidjson/document.h"
+#include <map>
+#include <unordred_map>
 
 using namespace wrapidjson;
 
@@ -205,6 +207,20 @@ int main() {
 
     first.insert("3", 3.0);
     ObjectRef third = first.insert("4");
+
+
+    // Get value 
+    optional<double> dval = first.get_value<double>("1");
+    // Get With Default Value
+    double dval2 = first.get_value<double>("1", 0.0);
+
+    // Range Base for
+    for (auto item : doc["second"].get_object()) {
+        std::cerr << item.name.as<std::string>() << ":" << item.value.as<std::string>() << std::endl;
+    } 
+    for(auto item : third) {
+        std::cerr << item.name.as<std::string>() << ":" << item.value.as<std::string>() << std::endl;
+    }
     
     return 0;    
 }
@@ -224,7 +240,7 @@ int main() {
     // string_view is not copy string
     auto first = doc["first"];
     first["chr*"] = "const char* is copy string";
-    first["string] = std::string("std::string is copy string");
+    first["string"] = std::string("std::string is copy string");
     first["string_view"] = string_view("wrapidjson::string_view is not copy string");
 
 
