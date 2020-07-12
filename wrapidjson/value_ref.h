@@ -86,12 +86,14 @@ public:
     ValueRef(const ValueRef&);
     ValueRef(const ArrayRef&);
     ValueRef(const ObjectRef&);
+    ValueRef(const Document&);
 
     /// destructor
     virtual ~ValueRef() = default;
 
     /// copy assignment
     ValueRef& operator=(const ValueRef&);
+    ValueRef& operator=(const Document&);
 
     template<typename T>
     ValueRef& operator=(T value) {
@@ -148,12 +150,6 @@ public:
 
     /// assign from Object reference
     ValueRef& operator=(const ObjectRef& object);
-
-    /// set Value (Number, String, Null)
-    template<typename T>
-    ValueRef& setValue(T&& value) {
-        return operator=(std::forward<T>(value));
-    }
 
     /// assign from all continaer ( array, map )
     template<template <typename...> class Container, typename ...Args>

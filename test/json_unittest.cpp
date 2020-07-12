@@ -9,6 +9,8 @@
 
 #include "wrapidjson/document.h"
 
+using namespace wrapidjson;
+
 TEST(wrapidjsonTest, ucs4)
 {
     std::string json = R"({"content":"\uD83C\uDFAF"})";
@@ -18,7 +20,7 @@ TEST(wrapidjsonTest, ucs4)
     expected[2] = 0x8E;
     expected[3] = 0xAF;
 
-    wrapidjson::Document value;
+    Document value;
     ASSERT_TRUE(value.load_from_buffer(json));
     EXPECT_EQ(expected, value["content"].as<std::string>());
 
@@ -26,7 +28,7 @@ TEST(wrapidjsonTest, ucs4)
     std::map<std::string, double> irf_score_map;
 
     ASSERT_TRUE(value.load_from_buffer(irf_json));
-    for ( const wrapidjson::ArrayRef arr2 : value.get_array() ) {
+    for ( const ArrayRef arr2 : value.get_array() ) {
         if (arr2.size() == 2) {
             const char* docid = arr2[0].as<const char*>();
             irf_score_map[docid] = arr2[1].as<double>();
@@ -40,7 +42,7 @@ TEST(wrapidjsonTest, ucs4)
 
 TEST(wrapidjsonTest, assign_basic)
 {
-    wrapidjson::Document value;
+    Document value;
     value["1000"] = 1000;
     value["1000s"] = "1000";
     EXPECT_EQ(value["1000"].as<uint64_t>(), 1000u);
@@ -53,13 +55,10 @@ TEST(wrapidjsonTest, document_copy)
 {
     std::string result;
     {
-        wrapidjson::Document value, array_doc, object_doc; 
+        Document value, array, object; 
 
-        array_doc.set_container(std::vector<std::string>{"a","b","c","d","e"});
-        object_doc.set_container(std::unordered_map<std::string, int64_t>{ {"a",1}, {"b",1}, {"c",3} });
-
-        auto array = array_doc.get_array();
-        auto object = object_doc.get_object();
+        array.set_container(std::vector<std::string>{"a","b","c","d","e"});
+        object.set_container(std::unordered_map<std::string, int64_t>{ {"a",1}, {"b",1}, {"c",3} });
 
         value["array"] = array;         // copy
         value["object"] = object;       // copy
@@ -76,7 +75,7 @@ TEST(wrapidjsonTest, document_copy)
     }
 
     {
-        wrapidjson::Document value;
+        Document value;
         value.load_from_buffer(result);
         EXPECT_EQ(value.size(), 8u);
         EXPECT_TRUE(value.is_object());
@@ -102,7 +101,7 @@ TEST(wrapidjsonTest, document_copy)
 
 TEST(wrapidjsonTest, json_format_error)
 {
-    wrapidjson::Document doc;
+    Document doc;
     EXPECT_TRUE(doc.load_from_buffer(R"("")"));
     EXPECT_EQ(doc.get_load_error(), "Error offset[0]: No error.");
 
@@ -147,7 +146,7 @@ TEST(wrapidjsonTest, rapidjson_format)
     std::string result;
     {
         // SET
-        wrapidjson::Document root;
+        Document root;
 
         std::vector<std::string> a = {"a","b","c","d","e"};
         std::map<std::string, int64_t> b = { {"a",1}, {"b",2}, {"c",3} };
@@ -155,34 +154,34 @@ TEST(wrapidjsonTest, rapidjson_format)
         root["array"] = a;
         root["object"] = b;
 
-        wrapidjson::ArrayRef array = root["array"];
+        ArrayRef array = root["array"];
 
         array.push_back("f");                   // str copy
         array.push_back("g");                   // str copy
-        wrapidjson::ValueRef item_h = array.push_back();
+        auto item_h = array.push_back();
         item_h = "h";                           // str copy
-        wrapidjson::ValueRef item_i = array.push_back();
-        item_i.setValue(wrapidjson::string_view("i")); // str no copy
+        auto item_i = array.push_back();
+        item_i = string_view("i"); // str no copy
 
-        wrapidjson::ObjectRef object = root["object"];
+        ObjectRef object = root["object"];
         object["d"] = 4;                    // copy
         object[std::string("e")] = 5;       // copy
-        object[wrapidjson::string_view("f")] = 6; // no copy
+        object[string_view("f")] = 6; // no copy
 
-        wrapidjson::ValueRef g = object.insert("g");
+        auto g = object.insert("g");
         g = "g";
-        wrapidjson::ValueRef h = object.insert(std::string("h"));
+        auto h = object.insert(std::string("h"));
         std::string h_str = "h";
-        h = wrapidjson::string_view(h_str.data(), h_str.length());
+        h = string_view(h_str.data(), h_str.length());
         std::string i = "itest";
-        object.insert(wrapidjson::string_view("i"), i);
+        object.insert(string_view("i"), i);
 
         std::set<int> c = {1,2,3,4,5,6};
         std::map<std::string, std::string> d = { {"a","1"}, {"b","1"}, {"c","3"} };
 
-        wrapidjson::ArrayRef array1 = root["array1"];
+        ArrayRef array1 = root["array1"];
         array1 = c;
-        wrapidjson::ObjectRef object1 = root["object1"];
+        ObjectRef object1 = root["object1"];
         object1 = d;
 
         root.save_to_buffer(result);
@@ -192,15 +191,15 @@ TEST(wrapidjsonTest, rapidjson_format)
 
     {
         // GET
-        wrapidjson::Document root;
+        Document root;
         root.load_from_buffer(result);
 
         EXPECT_TRUE(root.is_object());
         EXPECT_TRUE(root["object"].is_object());
         EXPECT_TRUE(root["array"].is_array());
 
-        EXPECT_THROW(wrapidjson::ArrayRef array = root["object"], std::exception);
-        wrapidjson::ObjectRef object = root["object"];
+        EXPECT_THROW(ArrayRef array = root["object"], std::exception);
+        ObjectRef object = root["object"];
         EXPECT_EQ(object.size(), 9u);
         EXPECT_EQ(object["a"].as<int>(), 1);
         EXPECT_EQ(object["b"].as<int>(), 2);
@@ -209,8 +208,8 @@ TEST(wrapidjsonTest, rapidjson_format)
         EXPECT_EQ(object["e"].as<int>(), 5);
         EXPECT_EQ(object["f"].as<int>(), 6);
 
-        EXPECT_THROW(wrapidjson::ObjectRef object = root["array"], std::exception);
-        wrapidjson::ArrayRef array = root["array"];
+        EXPECT_THROW(ObjectRef object = root["array"], std::exception);
+        ArrayRef array = root["array"];
         EXPECT_EQ(array.size(), 9u);
         EXPECT_EQ(array[0].as<std::string>(), "a");
         EXPECT_EQ(array[1].as<std::string>(), "b");
@@ -230,7 +229,7 @@ TEST(wrapidjsonTest, json_get)
     std::string result;
     {
         // SET
-        wrapidjson::Document obj;
+        Document obj;
 
         obj["char_i"] = 44;
         obj["char_c"] = "A";
@@ -275,14 +274,14 @@ TEST(wrapidjsonTest, json_get)
 
     {
         // GET
-        wrapidjson::Document doc;
+        Document doc;
         doc.load_from_buffer(result);
         EXPECT_TRUE(doc.is_object());
         EXPECT_FALSE(doc.is_null());
         EXPECT_FALSE(doc.is_array());
         EXPECT_FALSE(doc.empty());
 
-        wrapidjson::ObjectRef object = doc;
+        ObjectRef object = doc;
         EXPECT_EQ(object.size(), 28u);
 
         EXPECT_FALSE(object["char_i"].get<char>());
@@ -378,7 +377,7 @@ TEST(wrapidjsonTest, json_get)
 
 TEST(wrapidjsonTest, json_merge)
 {
-    wrapidjson::Document root;
+    Document root;
 
     std::vector<std::string> a = {"a","b","c","d","e"};
     std::set<int> b = {1,2,3,4,5,6};
@@ -389,9 +388,7 @@ TEST(wrapidjsonTest, json_merge)
     root["b"] = b;
     root["c"] = c;
     root["d"] = d;
-
-    wrapidjson::Document add(R"({"a1":["a","b","c","d","e"],"b2":[1,2,3,4,5,6],"c2":{"a":1,"b":2,"c":3},"d2":{"a":"1","b":"2","c":"3"}})");
-    root["e"] = add.get_ref();
+    root["e"] = Document(R"({"a1":["a","b","c","d","e"],"b2":[1,2,3,4,5,6],"c2":{"a":1,"b":2,"c":3},"d2":{"a":"1","b":"2","c":"3"}})");
 
     std::string res;
     root.save_to_buffer(res);
@@ -404,7 +401,7 @@ TEST(wrapidjsonTest, object_test)
 {
     std::string res;
     {
-        wrapidjson::Document root;
+        Document root;
 
         std::map<std::string, int64_t> a = { {"a",-1}, {"b",-2}, {"c",-3} };
         std::map<std::string, uint32_t> b = { {"a",1}, {"b",2}, {"c",3} };
@@ -424,7 +421,7 @@ TEST(wrapidjsonTest, object_test)
     }
 
     {
-        wrapidjson::Document root;
+        Document root;
         root.load_from_buffer(res);
 
         // object get function
@@ -453,7 +450,7 @@ TEST(wrapidjsonTest, object_test)
 
 TEST(wrapidjsonTest, array_test)
 {
-    wrapidjson::Document root;
+    Document root;
 
     std::vector<std::string> a = {"a","b","c","d","e"};
     std::vector<int64_t> b = {1,2,3,4,5,6};
@@ -506,7 +503,7 @@ TEST(wrapidjsonTest, array_test)
 
 TEST(wrapidjsonTest, set_container)
 {
-    wrapidjson::Document root;
+    Document root;
 
     std::vector<std::string> a = {"a","b","c","d","e"};
     std::set<long> b = {1,2,3,4,5,6};
@@ -579,7 +576,7 @@ TEST(wrapidjsonTest, set_container)
 
 TEST(wrapidjsonTest, find_test)
 {
-    wrapidjson::Document doc;
+    Document doc;
     auto root = doc.get_object();
 
     root["TEST2"] = "11111";
