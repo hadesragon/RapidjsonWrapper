@@ -55,18 +55,18 @@ int main() {
 using namespace wrapidjson;
 
 int main() {
-	// 1. Parse a JSON.
-	const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
-	Document doc(json);
-	
-	// 2. Get and Set.
-	auto s = obj["stars"];
+    // 1. Parse a JSON.
+    const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
+    Document doc(json);
+    
+    // 2. Get and Set.
+    auto s = obj["stars"];
     s = (s.as<int>() + 1);
     
     // 3. Stringify
     std::string buffer;
-	doc.save_to_buffer(buffer);
-	
+    doc.save_to_buffer(buffer);
+    
     // Output {"project":"rapidjson","stars":11}
     std::cout << buffer << std::endl;
     return 0;
@@ -83,23 +83,23 @@ using namespace wrapidjson;
 
 int main() {
     const  char* json =  "{\"project\":\"rapidjson\",\"stars\":10}";
-	Document doc;
-	// String 
-	bool success = doc.load_from_buffer(json);
-	std::string buffer;
-	doc.save_to_buffer(buffer);
-	doc.clear();
-	
-	// File
-	success = doc.load_from_file("/home/wrapidjson/json_file");
-	doc.clear();
-	success = doc.save_to_file("/home/wrapidjson/new_file");
-	
-	// Stream
-	std::stringstream ss(json), out;
-	success = doc.load_from_stream(ss);
+    Document doc;
+    // String 
+    bool success = doc.load_from_buffer(json);
+    std::string buffer;
+    doc.save_to_buffer(buffer);
+    doc.clear();
+    
+    // File
+    success = doc.load_from_file("/home/wrapidjson/json_file");
+    doc.clear();
+    success = doc.save_to_file("/home/wrapidjson/new_file");
+    
+    // Stream
+    std::stringstream ss(json), out;
+    success = doc.load_from_stream(ss);
     success = doc.save_to_stream(out);
-	return 0;
+    return 0;
 }
 ~~~~~~~~~~
 #### ValueRef
@@ -111,16 +111,16 @@ int main() {
 using namespace wrapidjson;
 
 int main() {
-	Document doc;
-	ValueRef intval = doc["intval"];
-	intval = 123;
-	auto strval = doc["strval"] = "123.456";
+    Document doc;
+    ValueRef intval = doc["intval"];
+    intval = 123;
+    auto strval = doc["strval"] = "123.456";
 
     // get<> function check type
-	optional<const char*> str = intval.get<const char*>();
-	// str has nullptr
-	auto integer = strval.get<int>();
-	// integer has nullptr
+    optional<const char*> str = intval.get<const char*>();
+    // str has nullptr
+    auto integer = strval.get<int>();
+    // integer has nullptr
 
     // as<> function get or convert type
     auto ival = intval.as<int>();
@@ -130,8 +130,8 @@ int main() {
     auto dval = strval.as<double>();
     // dval is 123.456
     
-	std::cout << doc << std::endl; // {"intval":123, "doubleval":123.456}
-	return 0;
+    std::cout << doc << std::endl; // {"intval":123, "doubleval":123.456}
+    return 0;
 } 
 ~~~~~~~~~~
 #### ArrayRef
@@ -143,43 +143,43 @@ int main() {
 using namespace wrapidjson;
 
 int main() {
-	Document doc;
-	// change to array type
-	ArrayRef array = doc;
-	// rapidjson::Value::Reserve
-	array.reserve(10);
+    Document doc;
+    // change to array type
+    ArrayRef array = doc;
+    // rapidjson::Value::Reserve
+    array.reserve(10);
     // push_back call rapidjson::Value::PushBack
-	array.push_back(1);
-	array.push_back(2.0);
-	array.push_back("3");
+    array.push_back(1);
+    array.push_back(2.0);
+    array.push_back("3");
 
-	// make sub array
-	ArrayRef sub_array = array.push_back();
-	
-	// avaiable set STL container
-	sub_array = std::vector<std::string>{"1","2","3","4"};
-	
-	// auto convert array type
-	auto set_array = array.push_back();
-	set_array = std::set<double>{1.0, 2.0, 3.0};
+    // make sub array
+    ArrayRef sub_array = array.push_back();
+    
+    // avaiable set STL container
+    sub_array = std::vector<std::string>{"1","2","3","4"};
+    
+    // auto convert array type
+    auto set_array = array.push_back();
+    set_array = std::set<double>{1.0, 2.0, 3.0};
 
-	// make object array
-	ArrayRef map_array = array.push_back();
-	map_array.resize(5);
-	// range base loop
-	for (ObjectRef obj : map_array) {
-		obj["key"] = "value";
-	}
+    // make object array
+    ArrayRef map_array = array.push_back();
+    map_array.resize(5);
+    // range base loop
+    for (ObjectRef obj : map_array) {
+        obj["key"] = "value";
+    }
 
-	// get_vector check type
-	auto get_vec = array.get_vector<int>();
-	// get_vec is nullptr
+    // get_vector check type
+    auto get_vec = array.get_vector<int>();
+    // get_vec is nullptr
 
     // as_vector convert type
-	auto as_vec = array.as_vector<int>();
-	// as_vec is [1,2,3,0,0,0]  array or object convert to 0
-	
-	return 0;
+    auto as_vec = array.as_vector<int>();
+    // as_vec is [1,2,3,0,0,0]  array or object convert to 0
+    
+    return 0;
 }
 ~~~~~~~~~~
 #### ObjectRef
@@ -191,20 +191,20 @@ int main() {
 using namespace wrapidjson;
 
 int main() {
-	Document doc;
+    Document doc;
 
-	ObjectRef first = doc["first"];
+    ObjectRef first = doc["first"];
 
     // avaiable set std::map or std::unordered_map
-	first = std::map<std::string, double>{{"1",1.0}, {"2",2.0}};
-	
-	// convert to object type
-	doc["second"] = std::unordered_map<std::string, uint64_t>{{"1", 1}, {"2",2}};
+    first = std::map<std::string, double>{{"1",1.0}, {"2",2.0}};
+    
+    // convert to object type
+    doc["second"] = std::unordered_map<std::string, uint64_t>{{"1", 1}, {"2",2}};
 
-	first.insert("3", 3.0);
-	ObjectRef third = first.insert("4");
-	
-	return 0;	
+    first.insert("3", 3.0);
+    ObjectRef third = first.insert("4");
+    
+    return 0;    
 }
 ~~~~~~~~~~
 #### StringView
@@ -217,7 +217,7 @@ int main() {
 using namespace wrapidjson;
 
 int main() {
-	Document doc;
+    Document doc;
 
     // string_view is not copy string
     auto first = doc["first"];
@@ -237,6 +237,6 @@ int main() {
     bool str_copy = false;
     auto third = doc["third"];
     third.set_container(vec, str_copy);
-	return 0;	
+    return 0;    
 }
 ~~~~~~~~~~
