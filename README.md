@@ -88,12 +88,12 @@ int main() {
     bool success = doc.load_from_buffer(json);
     std::string buffer;
     doc.save_to_buffer(buffer);
-    doc.clear();
+    doc.set_null();
     
     // File
     success = doc.load_from_file("/home/wrapidjson/json_file");
-    doc.clear();
     success = doc.save_to_file("/home/wrapidjson/new_file");
+    doc.set_null();
     
     // Stream
     std::stringstream ss(json), out;
@@ -130,7 +130,9 @@ int main() {
     auto dval = strval.as<double>();
     // dval is 123.456
     
-    std::cout << doc << std::endl; // {"intval":123, "doubleval":123.456}
+    std::string buffer;
+    doc.save_to_string(buffer);
+    std::cout << buffer << std::endl; // {"intval":123, "doubleval":123.456}
     return 0;
 } 
 ~~~~~~~~~~
