@@ -154,27 +154,7 @@ size_t ValueRef::size() const {
 /// ValueRef::as tempalte impl
 /// type = as<type> 인터페이스
 /////////////////////////////////////////////////////////////////////////////////////////////
-template<typename T, typename std::enable_if<std::is_same<T, char>::value, T>::type*>
-inline char ValueRef::as() const {
-    if (value_.IsNumber()) {
-        if (value_.IsInt()) {
-            return static_cast<char>(value_.GetInt());
-        } else if (value_.IsUint()) {
-            return static_cast<char>(value_.GetUint());
-        } else if (value_.IsInt64()) {
-            return static_cast<char>(value_.GetInt64());
-        } else if (value_.IsUint64()) {
-            return static_cast<char>(value_.GetUint64());
-        } else if (value_.IsDouble()) {
-            return static_cast<char>(value_.GetDouble());
-        }
-    } else if (value_.IsString() and value_.GetStringLength() > 0) {
-        return value_.GetString()[0];
-    }
-    return ' ';
-}
-
-template<typename T, typename std::enable_if<std::is_arithmetic<T>::value && !std::is_same<T, char>::value, T>::type*>
+template<typename T, detail::enable_if_num_t<T>*>
 T ValueRef::as() const {
     if (value_.IsNumber()) {
         if (value_.IsInt()) {
@@ -196,7 +176,28 @@ T ValueRef::as() const {
     return 0;
 }
 
-template<typename T, typename std::enable_if<detail::is_const_char<T>::value, T>::type*>
+template<typename T, detail::enable_if_char_t<T>*>
+inline char ValueRef::as() const {
+    if (value_.IsNumber()) {
+        if (value_.IsInt()) {
+            return static_cast<char>(value_.GetInt());
+        } else if (value_.IsUint()) {
+            return static_cast<char>(value_.GetUint());
+        } else if (value_.IsInt64()) {
+            return static_cast<char>(value_.GetInt64());
+        } else if (value_.IsUint64()) {
+            return static_cast<char>(value_.GetUint64());
+        } else if (value_.IsDouble()) {
+            return static_cast<char>(value_.GetDouble());
+        }
+    } else if (value_.IsString() and value_.GetStringLength() > 0) {
+        return value_.GetString()[0];
+    }
+    return ' ';
+}
+
+
+template<typename T, detail::enable_if_cptr_t<T>*>
 inline const char* ValueRef::as() const {
     if (value_.IsString()) {
         return value_.GetString();
@@ -204,7 +205,7 @@ inline const char* ValueRef::as() const {
     return nullptr;
 }
 
-template<typename T, typename std::enable_if<detail::is_string<T>::value, T>::type*>
+template<typename T, detail::enable_if_str_t<T>*>
 inline std::string ValueRef::as() const {
     if (value_.IsNumber()) {
         if (value_.IsInt()) {
@@ -230,8 +231,7 @@ inline std::string ValueRef::as() const {
 /// ValueRef::get tempalte impl
 /// optional<type> = get<type> 인터페이스
 /////////////////////////////////////////////////////////////////////////////////////////////
-template<typename T, typename std::enable_if<
-    std::is_integral<T>::value && std::is_same<T, bool>::value, T>::type*>
+template<typename T, detail::enable_if_bool_t<T>*>
 inline optional<bool> ValueRef::get() const {
     optional<bool> res;
     if ( value_.IsBool() ) {
@@ -240,8 +240,7 @@ inline optional<bool> ValueRef::get() const {
     return res;
 }
 
-template<typename T, typename std::enable_if<
-    std::is_integral<T>::value && std::is_same<T, char>::value, T>::type*>
+template<typename T, detail::enable_if_char_t<T>*>
 inline optional<char> ValueRef::get() const {
     optional<char> res;
     if (value_.IsString() && value_.GetStringLength() == 1) {
@@ -250,8 +249,7 @@ inline optional<char> ValueRef::get() const {
     return res;
 }
 
-template<typename T, typename std::enable_if<
-    std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) == 8, T>::type*>
+template<typename T, detail::enable_if_long_t<T>*>
 inline optional<T> ValueRef::get() const {
     optional<T> res;
     if ( value_.IsInt64() ) {
@@ -260,8 +258,7 @@ inline optional<T> ValueRef::get() const {
     return res;
 }
 
-template<typename T, typename std::enable_if<
-    std::is_integral<T>::value && !std::is_same<T, char>::value && std::is_signed<T>::value && sizeof(T) < 8, T>::type*>
+template<typename T, detail::enable_if_int_t<T>*>
 inline optional<T> ValueRef::get() const {
     optional<T> res;
     if ( value_.IsInt() and value_.GetInt() >= std::numeric_limits<T>::min() and value_.GetInt() <= std::numeric_limits<T>::max() ) {
@@ -270,8 +267,7 @@ inline optional<T> ValueRef::get() const {
     return res;
 }
 
-template<typename T, typename std::enable_if<
-    std::is_integral<T>::value && !std::is_same<T, bool>::value && std::is_unsigned<T>::value && sizeof(T) == 8, T>::type*>
+template<typename T, detail::enable_if_ulong_t<T>*>
 inline optional<T> ValueRef::get() const {
     optional<T> res;
     if ( value_.IsUint64() ) {
@@ -280,17 +276,18 @@ inline optional<T> ValueRef::get() const {
     return res;
 }
 
-template<typename T, typename std::enable_if<
-    std::is_integral<T>::value && !std::is_same<T, bool>::value && std::is_unsigned<T>::value && sizeof(T) < 8, T>::type*>
+template<typename T, detail::enable_if_uint_t<T>*>
 inline optional<T> ValueRef::get() const {
     optional<T> res;
-    if ( value_.IsUint() and value_.GetUint() >= std::numeric_limits<T>::min() and value_.GetUint() <= std::numeric_limits<T>::max() ) {
+    if ( value_.IsUint()
+            and value_.GetUint() >= std::numeric_limits<T>::min()
+            and value_.GetUint() <= std::numeric_limits<T>::max() ) {
         res = static_cast<T>(value_.GetUint());
     }
     return res;
 }
 
-template<typename T, typename std::enable_if<std::is_floating_point<T>::value, T>::type*>
+template<typename T, detail::enable_if_float_t<T>*>
 inline optional<T> ValueRef::get() const {
     optional<T> res;
     if (value_.IsNumber()) {
@@ -299,8 +296,8 @@ inline optional<T> ValueRef::get() const {
     return res;
 }
 
-template<typename T, typename std::enable_if<detail::is_const_char<T>::value, T>::type*>
-inline optional<T> ValueRef::get() const {
+template<typename T, detail::enable_if_cptr_t<T>*>
+inline optional<const char*> ValueRef::get() const {
     optional<const char*> res;
     if (value_.IsString()) {
         res = value_.GetString();
@@ -308,8 +305,8 @@ inline optional<T> ValueRef::get() const {
     return res;
 }
 
-template<typename T, typename std::enable_if<detail::is_string<T>::value, T>::type*>
-inline optional<T> ValueRef::get() const {
+template<typename T, detail::enable_if_str_t<T>*>
+inline optional<std::string> ValueRef::get() const {
     optional<std::string> res;
     if (value_.IsString()) {
         res = std::string(value_.GetString(), value_.GetStringLength());
@@ -322,10 +319,8 @@ inline optional<T> ValueRef::get() const {
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 /// set Container ( Container<Number> )
-template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-    detail::is_iterable<Container<T, Args...>>::value &&
-    !detail::is_map<Container<T, Args...>>::value
-    , Container<T, Args...>>::type*
+template<typename T, template <typename...> class Container, typename...Args, 
+    detail::enable_if_sequence_t<T, Container, Args...>*
 >
 inline void ValueRef::set_container(const Container<T, Args...>& array, bool str_copy)
 {
@@ -339,10 +334,8 @@ inline void ValueRef::set_container(const Container<T, Args...>& array, bool str
 
 
 /// set Container ( Continaer<String> )
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    detail::is_iterable<Container<std::string, Args...>>::value &&
-    !detail::is_map<Container<std::string, Args...>>::value
-    , Container<std::string, Args...> >::type*
+template<template <typename...> class Container, typename...Args,
+    detail::enable_if_sequence_t<std::string, Container, Args...>*
 >
 inline void ValueRef::set_container(const Container<std::string, Args...>& array, bool str_copy)
 {
@@ -357,12 +350,11 @@ inline void ValueRef::set_container(const Container<std::string, Args...>& array
     }
 }
 
-/// assing from map<string, Value>
-template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-    detail::is_map<Container<std::string, Value, Args...>>::value
-    , Container<std::string, Value, Args...>>::type*
+/// assing from map<string, T>
+template<typename T, template <typename...> class Container, typename...Args,
+    detail::enable_if_strmap_t<T, Container, Args...>*
 >
-inline void ValueRef::set_container(const Container<std::string, Value, Args...>& map, bool str_copy)
+inline void ValueRef::set_container(const Container<std::string, T, Args...>& map, bool str_copy)
 {
     value_.SetObject();
     for (auto& k : map){
@@ -378,9 +370,8 @@ inline void ValueRef::set_container(const Container<std::string, Value, Args...>
 }
 
 /// assign from map<string, string>
-template<template <typename...> class Container, typename std::enable_if<
-    detail::is_map<Container<std::string, std::string>>::value
-    , Container<std::string, std::string>>::type*
+template<template <typename...> class Container,
+    detail::enable_if_strmap_t<std::string, Container>*
 >
 inline void ValueRef::set_container(const Container<std::string, std::string>& map, bool str_copy)
 {

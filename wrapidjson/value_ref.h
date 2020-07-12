@@ -159,32 +159,26 @@ public:
     }
 
     /// set Container ( Container<Number> )
-    template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-        detail::is_iterable<Container<T, Args...>>::value &&
-        !detail::is_map<Container<T, Args...>>::value
-        , Container<T, Args...>>::type* = nullptr
+    template<typename T, template <typename...> class Container, typename...Args,
+        detail::enable_if_sequence_t<T, Container, Args...>* = nullptr
     >
     void set_container(const Container<T, Args...>& array, bool str_copy = true);
 
     /// set Container ( Continaer<String> )
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        detail::is_iterable<Container<std::string, Args...>>::value &&
-        !detail::is_map<Container<std::string, Args...>>::value
-        , Container<std::string, Args...> >::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_sequence_t<std::string, Container, Args...>* = nullptr
     >
     void set_container(const Container<std::string, Args...>& array, bool str_copy = true);
 
     /// assign from map<string, Number>
-    template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-        detail::is_map<Container<std::string, Value, Args...>>::value
-        , Container<std::string, Value, Args...>>::type* = nullptr
+    template<typename T, template <typename...> class Container, typename...Args,
+        detail::enable_if_strmap_t<T, Container, Args...>* = nullptr
     >
-    void set_container(const Container<std::string, Value, Args...>& map, bool str_copy = true);
+    void set_container(const Container<std::string, T, Args...>& map, bool str_copy = true);
 
     /// assign from map<string, string>
-    template<template <typename...> class Container, typename std::enable_if<
-        detail::is_map<Container<std::string, std::string>>::value
-        , Container<std::string, std::string>>::type* = nullptr
+    template<template <typename...> class Container,
+        detail::enable_if_strmap_t<std::string, Container>* = nullptr
     >
     void set_container(const Container<std::string, std::string>& map, bool str_copy = true);
 
@@ -235,56 +229,51 @@ public:
     bool operator!=(const ValueRef& other) { return !(operator==(other)); }
 
     /// type = as<type>
-    template<typename T, typename std::enable_if<std::is_same<T, char>::value, T>::type* = nullptr>
-    char as() const;
-
-    template<typename T, typename std::enable_if<
-        std::is_arithmetic<T>::value && !std::is_same<T, char>::value, T>::type* = nullptr>
+    template<typename T, detail::enable_if_num_t<T>* = nullptr>
     T as() const;
 
-    template<typename T, typename std::enable_if<detail::is_const_char<T>::value, T>::type* = nullptr>
+    template<typename T, detail::enable_if_char_t<T>* = nullptr>
+    char as() const;
+
+    template<typename T, detail::enable_if_cptr_t<T>* = nullptr>
     const char* as() const;
 
-    template<typename T, typename std::enable_if<detail::is_string<T>::value, T>::type* = nullptr>
+    template<typename T, detail::enable_if_str_t<T>* = nullptr>
     std::string as() const;
 
 
     /// optional<type> = get<type>
-    template<typename T, typename std::enable_if<
-        std::is_integral<T>::value && std::is_same<T, bool>::value, T>::type* = nullptr>
+    template<typename T, detail::enable_if_bool_t<T>* = nullptr>
     optional<bool> get() const;
 
-    template<typename T, typename std::enable_if<
-        std::is_integral<T>::value && std::is_same<T, char>::value, T>::type* = nullptr>
+    template<typename T, detail::enable_if_char_t<T>* = nullptr>
     optional<char> get() const;
 
-    template<typename T, typename std::enable_if<
-        std::is_integral<T>::value && std::is_signed<T>::value && sizeof(T) == 8, T>::type* = nullptr>
+    // long, long long
+    template<typename T, detail::enable_if_long_t<T>* = nullptr>
     optional<T> get() const;
 
-    template<typename T, typename std::enable_if<
-        std::is_integral<T>::value && !std::is_same<T, char>::value
-        && std::is_signed<T>::value && sizeof(T) < 8, T>::type* = nullptr>
+    // int8_t, short, int
+    template<typename T, detail::enable_if_int_t<T>* = nullptr>
     optional<T> get() const;
 
-    template<typename T, typename std::enable_if<
-        std::is_integral<T>::value && !std::is_same<T, bool>::value
-        && std::is_unsigned<T>::value && sizeof(T) == 8, T>::type* = nullptr>
+    // unsigned long, unsigned long long
+    template<typename T, detail::enable_if_ulong_t<T>* = nullptr>
     optional<T> get() const;
 
-    template<typename T, typename std::enable_if<
-        std::is_integral<T>::value && !std::is_same<T, bool>::value
-        && std::is_unsigned<T>::value && sizeof(T) < 8, T>::type* = nullptr>
+    // uint8_t, unsigned short, unsigned int
+    template<typename T, detail::enable_if_uint_t<T>* = nullptr>
     optional<T> get() const;
 
-    template<typename T, typename std::enable_if<std::is_floating_point<T>::value, T>::type* = nullptr>
+    // float, double
+    template<typename T, detail::enable_if_float_t<T>* = nullptr>
     optional<T> get() const;
 
-    template<typename T, typename std::enable_if<detail::is_const_char<T>::value, T>::type* = nullptr>
-    optional<T> get() const;
+    template<typename T, detail::enable_if_cptr_t<T>* = nullptr>
+    optional<const char*> get() const;
 
-    template<typename T, typename std::enable_if<detail::is_string<T>::value, T>::type* = nullptr>
-    optional<T> get() const;
+    template<typename T, detail::enable_if_str_t<T>* = nullptr>
+    optional<std::string> get() const;
 
     ValueRef get_ref() const;
     ArrayRef get_array() const;
