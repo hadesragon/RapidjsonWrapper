@@ -102,30 +102,26 @@ public:
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Against long != int64_t
+    // IF long != int64_t
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template<typename T = long>
     ValueRef& operator=(long value) {
         value_ = static_cast<int64_t>(value);
         return *this;
     }
 
-    template<typename T = unsigned long>
     ValueRef& operator=(unsigned long value) {
         value_ = static_cast<uint64_t>(value);
         return *this;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Against long long != int64_t
+    // IF long long != int64_t
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template<typename T = long long>
     ValueRef& operator=(long long value) {
         value_ = static_cast<int64_t>(value);
         return *this;
     }
 
-    template<typename T = unsigned long long>
     ValueRef& operator=(unsigned long long value) {
         value_ = static_cast<uint64_t>(value);
         return *this;
@@ -246,32 +242,35 @@ public:
     template<typename T, detail::enable_if_bool_t<T>* = nullptr>
     optional<bool> get() const;
 
+    // char
     template<typename T, detail::enable_if_char_t<T>* = nullptr>
     optional<char> get() const;
-
-    // long, long long
-    template<typename T, detail::enable_if_long_t<T>* = nullptr>
-    optional<T> get() const;
 
     // int8_t, short, int
     template<typename T, detail::enable_if_int_t<T>* = nullptr>
     optional<T> get() const;
 
-    // unsigned long, unsigned long long
-    template<typename T, detail::enable_if_ulong_t<T>* = nullptr>
+    // long, long long
+    template<typename T, detail::enable_if_int64_t<T>* = nullptr>
     optional<T> get() const;
 
     // uint8_t, unsigned short, unsigned int
     template<typename T, detail::enable_if_uint_t<T>* = nullptr>
     optional<T> get() const;
 
+    // unsigned long, unsigned long long
+    template<typename T, detail::enable_if_uint64_t<T>* = nullptr>
+    optional<T> get() const;
+
     // float, double
     template<typename T, detail::enable_if_float_t<T>* = nullptr>
     optional<T> get() const;
 
+    // const char*
     template<typename T, detail::enable_if_cptr_t<T>* = nullptr>
     optional<const char*> get() const;
 
+    // string
     template<typename T, detail::enable_if_str_t<T>* = nullptr>
     optional<std::string> get() const;
 
@@ -291,35 +290,26 @@ public:
     // IF long != int64_t
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// set Container ( Container<long> )
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        !std::is_same<int64_t, long>::value &&
-        detail::is_iterable<Container<long, Args...>>::value &&
-        !detail::is_map<Container<long, Args...>>::value
-        , Container<long, Args...>>::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_l_sequence_t<Container, Args...>* = nullptr
     >
     void set_container(const Container<long, Args...>& array, bool str_copy = true);
 
     /// set Container ( Container<unsigned long> )
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        !std::is_same<int64_t, long>::value &&
-        detail::is_iterable<Container<unsigned long, Args...>>::value &&
-        !detail::is_map<Container<unsigned long, Args...>>::value
-        , Container<unsigned long, Args...>>::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_ul_sequence_t<Container, Args...>* = nullptr
     >
     void set_container(const Container<unsigned long, Args...>& array, bool str_copy = true);
+
     /// assing from map<string, long> ( long != int64_t )
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        !std::is_same<int64_t, long>::value &&
-        detail::is_map<Container<std::string, long, Args...>>::value
-        , Container<std::string, long, Args...>>::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_str_l_map_t<Container, Args...>* = nullptr
     >
     void set_container(const Container<std::string, long, Args...>& map, bool str_copy = true);
 
     /// assing from map<string, unsinged long> ( unsigned long != uint64_t )
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        !std::is_same<int64_t, long>::value &&
-        detail::is_map<Container<std::string, unsigned long, Args...>>::value
-        , Container<std::string, unsigned long, Args...>>::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_str_ul_map_t<Container, Args...>* = nullptr
     >
     void set_container(const Container<std::string, unsigned long, Args...>& map, bool str_copy = true);
 
@@ -327,35 +317,25 @@ public:
     // IF long long != int64_t
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// set Container ( Container<long long> )
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        !std::is_same<int64_t, long long>::value &&
-        detail::is_iterable<Container<long long, Args...>>::value &&
-        !detail::is_map<Container<long long, Args...>>::value
-        , Container<long long, Args...>>::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_ll_sequence_t<Container, Args...>* = nullptr
     >
     void set_container(const Container<long long, Args...>& array, bool str_copy = true);
 
     /// set Container ( Container<unsigned long long> )
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        !std::is_same<int64_t, long long>::value &&
-        detail::is_iterable<Container<unsigned long long, Args...>>::value &&
-        !detail::is_map<Container<unsigned long long, Args...>>::value
-        , Container<unsigned long long, Args...>>::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_ull_sequence_t<Container, Args...>* = nullptr
     >
     void set_container(const Container<unsigned long long, Args...>& array, bool str_copy = true);
     /// assing from map<string, long long> ( long long != int64_t )
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        !std::is_same<int64_t, long long>::value &&
-        detail::is_map<Container<std::string, long long, Args...>>::value
-        , Container<std::string, long long, Args...>>::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_str_ll_map_t<Container, Args...>* = nullptr
     >
     void set_container(const Container<std::string, long long, Args...>& map, bool str_copy = true);
 
     /// assing from map<string, unsinged long long> ( unsigned long long != uint64_t )
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        !std::is_same<int64_t, long long>::value &&
-        detail::is_map<Container<std::string, unsigned long long, Args...>>::value
-        , Container<std::string, unsigned long long, Args...>>::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_str_ull_map_t<Container, Args...>* = nullptr
     >
     void set_container(const Container<std::string, unsigned long long, Args...>& map, bool str_copy = true);
 
@@ -377,17 +357,13 @@ public:
 
     ~ArrayRef() = default;
 
-    template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-        detail::is_iterable<Container<T, Args...>>::value &&
-        !detail::is_map<Container<T, Args...>>::value
-        , Container<T, Args...>>::type* = nullptr
+    template<typename T, template <typename...> class Container, typename...Args,
+        detail::enable_if_sequence_t<T, Container, Args...>* = nullptr
     >
     ArrayRef& operator=(const Container<T, Args...>& array);
 
-    template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-        detail::is_iterable<Container<T, Args...>>::value &&
-        !detail::is_map<Container<T, Args...>>::value
-        , Container<T, Args...>>::type* = nullptr
+    template<typename T, template <typename...> class Container, typename...Args,
+        detail::enable_if_sequence_t<T, Container, Args...>* = nullptr
     >
     void set_container(const Container<T, Args...>& array, bool str_copy = true);
 
@@ -442,41 +418,28 @@ public:
 
     ObjectRef& operator=(const ObjectRef& other) = delete;
 
-    template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-        detail::is_map<Container<std::string, Value, Args...>>::value
-        , Container<std::string, Value, Args...>>::type* = nullptr
+    /// set_container map<std::string, T>
+    template<typename T, template <typename...> class Container, typename...Args,
+        detail::enable_if_strmap_t<T, Container>* = nullptr
     >
-    ObjectRef& operator=(const Container<std::string, Value, Args...>& map);
+    ObjectRef& operator=(const Container<std::string, T, Args...>& map);
 
-    /// set_container map<std::string, Value>
-    template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-        detail::is_map<Container<std::string, Value, Args...>>::value
-        , Container<std::string, Value, Args...>>::type* = nullptr
+    /// set_container map<std::string, T>
+    template<typename T, template <typename...> class Container, typename...Args,
+        detail::enable_if_strmap_t<T, Container>* = nullptr
     >
-    void set_container(const Container<std::string, Value, Args...>& map, bool str_copy = true);
-
-    /// get_value<bool>()
-    template<typename T, typename std::enable_if<
-        std::is_same<bool, T>::value, T>::type* = nullptr
-    >
-    optional<bool> get_value(const std::string& name) const;
+    void set_container(const Container<std::string, T, Args...>& map, bool str_copy = true);
 
     /// get_value<String>()
-    template<typename T, typename std::enable_if<
-        detail::is_string<T>::value, T>::type* = nullptr
-    >
+    template<typename T, detail::enable_if_str_t<T>* = nullptr>
     optional<std::string> get_value(const std::string& name) const;
 
     /// get_value<const char>()
-    template<typename T, typename std::enable_if<
-        detail::is_const_char<T>::value, T>::type* = nullptr
-    >
+    template<typename T, detail::enable_if_cptr_t<T>* = nullptr>
     optional<const char*> get_value(const std::string& name) const;
 
     /// get_value<Number>()
-    template<typename T, typename std::enable_if<
-        std::numeric_limits<T>::is_bounded && !std::is_same<bool, T>::value, T>::type* = nullptr
-    >
+    template<typename T, detail::enable_if_num_t<T>* = nullptr>
     optional<T> get_value(const std::string& name) const;
 
     /// get_value<T>(default_value)
@@ -489,17 +452,13 @@ public:
 
     optional<ValueRef> find(const std::string& name) const;
 
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        detail::is_iterable<Container<std::string, Args...>>::value &&
-        !detail::is_map<Container<std::string, Args...>>::value
-        , Container<std::string, Args...> >::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_sequence_t<std::string, Container, Args...>* = nullptr
     >
     MemberIterator find_any(Container<std::string> names) const;
 
-    template<template <typename...> class Container, typename...Args, typename std::enable_if<
-        detail::is_iterable<Container<std::string, Args...>>::value &&
-        !detail::is_map<Container<std::string, Args...>>::value
-        , Container<std::string, Args...> >::type* = nullptr
+    template<template <typename...> class Container, typename...Args,
+        detail::enable_if_sequence_t<std::string, Container, Args...>* = nullptr
     >
     bool find_all(Container<std::string> names) const;
 

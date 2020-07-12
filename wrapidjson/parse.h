@@ -9,6 +9,7 @@
 #include <cerrno>
 
 #include "optional.hpp"
+#include "type_traits.h"
 
 namespace wrapidjson {
 namespace detail {
@@ -16,13 +17,15 @@ namespace detail {
 template<typename T>
 using optional = nonstd::optional<T>;
 
-template<typename T, typename std::enable_if<
-    std::is_integral<T>::value && std::is_same<T, bool>::value, T>::type* = nullptr>
-inline optional<T> parse(const std::string& value) {
+template<typename T, enable_if_bool_t<T>* = nullptr>
+inline optional<bool> parse(const std::string& value) {
     optional<bool> res;
     if( not value.empty() ) {
         std::string lower_value_string = value;
-        std::transform(lower_value_string.begin(), lower_value_string.end(), lower_value_string.begin(), ::tolower);
+        std::transform(lower_value_string.begin(),
+            lower_value_string.end(),
+            lower_value_string.begin(),
+            ::tolower);
         if (lower_value_string == "true" or lower_value_string == "false") {
             res = ("true" == lower_value_string);
         }
@@ -30,8 +33,7 @@ inline optional<T> parse(const std::string& value) {
     return res;
 }
 
-template<typename T, typename std::enable_if<
-    std::is_integral<T>::value && std::is_signed<T>::value, T>::type* = nullptr>
+template<typename T, enable_if_signed_t<T>* = nullptr>
 inline optional<T> parse(const std::string& value) {
     optional<T> res;
     if ( not value.empty() ) {
@@ -50,8 +52,7 @@ inline optional<T> parse(const std::string& value) {
     return res;
 }
 
-template<typename T, typename std::enable_if<
-    std::is_integral<T>::value && !std::is_same<T, bool>::value && std::is_unsigned<T>::value, T>::type* = nullptr>
+template<typename T, enable_if_unsigned_t<T>* = nullptr>
 inline optional<T> parse(const std::string& value) {
     optional<T> res;
     if ( not value.empty() and value.find("-") == std::string::npos ) {
@@ -70,7 +71,7 @@ inline optional<T> parse(const std::string& value) {
     return res;
 }
 
-template<typename T, typename std::enable_if<std::is_floating_point<T>::value, T>::type* = nullptr>
+template<typename T, enable_if_float_t<T>* = nullptr>
 inline optional<T> parse(const std::string& value) {
     optional<T> res;
     if ( not value.empty() ) {

@@ -249,7 +249,7 @@ inline optional<char> ValueRef::get() const {
     return res;
 }
 
-template<typename T, detail::enable_if_long_t<T>*>
+template<typename T, detail::enable_if_int64_t<T>*>
 inline optional<T> ValueRef::get() const {
     optional<T> res;
     if ( value_.IsInt64() ) {
@@ -261,13 +261,15 @@ inline optional<T> ValueRef::get() const {
 template<typename T, detail::enable_if_int_t<T>*>
 inline optional<T> ValueRef::get() const {
     optional<T> res;
-    if ( value_.IsInt() and value_.GetInt() >= std::numeric_limits<T>::min() and value_.GetInt() <= std::numeric_limits<T>::max() ) {
+    if ( value_.IsInt() and
+            value_.GetInt() >= std::numeric_limits<T>::min() and
+            value_.GetInt() <= std::numeric_limits<T>::max() ) {
         res = static_cast<T>(value_.GetInt());
     }
     return res;
 }
 
-template<typename T, detail::enable_if_ulong_t<T>*>
+template<typename T, detail::enable_if_uint64_t<T>*>
 inline optional<T> ValueRef::get() const {
     optional<T> res;
     if ( value_.IsUint64() ) {
@@ -279,9 +281,9 @@ inline optional<T> ValueRef::get() const {
 template<typename T, detail::enable_if_uint_t<T>*>
 inline optional<T> ValueRef::get() const {
     optional<T> res;
-    if ( value_.IsUint()
-            and value_.GetUint() >= std::numeric_limits<T>::min()
-            and value_.GetUint() <= std::numeric_limits<T>::max() ) {
+    if ( value_.IsUint() and
+            value_.GetUint() >= std::numeric_limits<T>::min() and
+             value_.GetUint() <= std::numeric_limits<T>::max() ) {
         res = static_cast<T>(value_.GetUint());
     }
     return res;
@@ -393,12 +395,7 @@ inline void ValueRef::set_container(const Container<std::string, std::string>& m
 // long != rapidjson::SizeType(int64_t)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// set Container ( Container<long> )
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    !std::is_same<int64_t, long>::value &&
-    detail::is_iterable<Container<long, Args...>>::value &&
-    !detail::is_map<Container<long, Args...>>::value
-    , Container<long, Args...>>::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_l_sequence_t<Container, Args...>*>
 inline void ValueRef::set_container(const Container<long, Args...>& array, bool str_copy)
 {
     (void)str_copy;
@@ -410,12 +407,7 @@ inline void ValueRef::set_container(const Container<long, Args...>& array, bool 
 }
 
 /// set Container ( Container<unsigned long> )
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    !std::is_same<uint64_t, unsigned long>::value &&
-    detail::is_iterable<Container<unsigned long, Args...>>::value &&
-    !detail::is_map<Container<unsigned long, Args...>>::value
-    , Container<unsigned long, Args...>>::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_ul_sequence_t<Container, Args...>*>
 inline void ValueRef::set_container(const Container<unsigned long, Args...>& array, bool str_copy)
 {
     (void)str_copy;
@@ -427,11 +419,7 @@ inline void ValueRef::set_container(const Container<unsigned long, Args...>& arr
 }
 
 /// assign from map<string, long>
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    !std::is_same<int64_t, long>::value &&
-    detail::is_map<Container<std::string, long, Args...>>::value
-    , Container<std::string, long, Args...>>::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_str_l_map_t<Container, Args...>*>
 inline void ValueRef::set_container(const Container<std::string, long, Args...>& map, bool str_copy)
 {
     value_.SetObject();
@@ -448,11 +436,7 @@ inline void ValueRef::set_container(const Container<std::string, long, Args...>&
 }
 
 /// assign from map<string, unsigned long>
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    !std::is_same<uint64_t, unsigned long>::value &&
-    detail::is_map<Container<std::string, unsigned long, Args...>>::value
-    , Container<std::string, unsigned long, Args...>>::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_str_ul_map_t<Container, Args...>*>
 inline void ValueRef::set_container(const Container<std::string, unsigned long, Args...>& map, bool str_copy)
 {
     value_.SetObject();
@@ -472,12 +456,7 @@ inline void ValueRef::set_container(const Container<std::string, unsigned long, 
 // long long != rapidjson::SizeType(int64_t)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// set Container ( Container<long long> )
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    !std::is_same<int64_t, long long>::value &&
-    detail::is_iterable<Container<long long, Args...>>::value &&
-    !detail::is_map<Container<long long, Args...>>::value
-    , Container<long long, Args...>>::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_ll_sequence_t<Container, Args...>*>
 inline void ValueRef::set_container(const Container<long long, Args...>& array, bool str_copy)
 {
     (void)str_copy;
@@ -489,12 +468,7 @@ inline void ValueRef::set_container(const Container<long long, Args...>& array, 
 }
 
 /// set Container ( Container<unsigned long long> )
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    !std::is_same<uint64_t, unsigned long long>::value &&
-    detail::is_iterable<Container<unsigned long long, Args...>>::value &&
-    !detail::is_map<Container<unsigned long long, Args...>>::value
-    , Container<unsigned long long, Args...>>::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_ull_sequence_t<Container, Args...>*>
 inline void ValueRef::set_container(const Container<unsigned long long, Args...>& array, bool str_copy)
 {
     (void)str_copy;
@@ -506,11 +480,7 @@ inline void ValueRef::set_container(const Container<unsigned long long, Args...>
 }
 
 /// assign from map<string, long long>
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    !std::is_same<int64_t, long long>::value &&
-    detail::is_map<Container<std::string, long long, Args...>>::value
-    , Container<std::string, long long, Args...>>::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_str_ll_map_t<Container, Args...>*>
 inline void ValueRef::set_container(const Container<std::string, long long, Args...>& map, bool str_copy)
 {
     value_.SetObject();
@@ -527,11 +497,7 @@ inline void ValueRef::set_container(const Container<std::string, long long, Args
 }
 
 /// assign from map<string, unsigned long long>
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    !std::is_same<uint64_t, unsigned long long>::value &&
-    detail::is_map<Container<std::string, unsigned long long, Args...>>::value
-    , Container<std::string, unsigned long long, Args...>>::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_str_ull_map_t<Container, Args...>*>
 inline void ValueRef::set_container(const Container<std::string, unsigned long long, Args...>& map, bool str_copy)
 {
     value_.SetObject();
@@ -583,20 +549,16 @@ inline ArrayRef::ArrayRef(const ValueRef& value)
     }
 }
 
-template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-    detail::is_iterable<Container<T, Args...>>::value &&
-    !detail::is_map<Container<T, Args...>>::value
-    , Container<T, Args...>>::type*
+template<typename T, template <typename...> class Container, typename...Args,
+    detail::enable_if_sequence_t<T, Container, Args...>*
 >
 inline ArrayRef& ArrayRef::operator=(const Container<T, Args...>& array) {
     valueRef_.set_container(array);
     return *this;
 }
 
-template<typename T, template <typename...> class Container, typename...Args, typename std::enable_if<
-    detail::is_iterable<Container<T, Args...>>::value &&
-    !detail::is_map<Container<T, Args...>>::value
-    , Container<T, Args...>>::type*
+template<typename T, template <typename...> class Container, typename...Args,
+    detail::enable_if_sequence_t<T, Container, Args...>*
 >
 inline void ArrayRef::set_container(const Container<T, Args...>& array, bool str_copy) {
     valueRef_.set_container(array, str_copy);
@@ -765,21 +727,19 @@ inline ObjectRef::ObjectRef(const ObjectRef& rfs)
     : valueRef_(rfs.valueRef_)
 {}
 
-template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-    detail::is_map<Container<std::string, Value, Args...>>::value
-    , Container<std::string, Value, Args...>>::type*
+template<typename T, template <typename...> class Container, typename...Args,
+    detail::enable_if_strmap_t<T, Container>*
 >
-inline ObjectRef& ObjectRef::operator=(const Container<std::string, Value, Args...>& map) {
+inline ObjectRef& ObjectRef::operator=(const Container<std::string, T, Args...>& map) {
     valueRef_.set_container(map);
     return *this;
 }
 
-/// set_container map<std::string, Value>
-template<typename Value, template <typename...> class Container, typename...Args, typename std::enable_if<
-    detail::is_map<Container<std::string, Value, Args...>>::value
-    , Container<std::string, Value, Args...>>::type*
+/// set_container map<std::string, T>
+template<typename T, template <typename...> class Container, typename...Args,
+    detail::enable_if_strmap_t<T, Container>*
 >
-inline void ObjectRef::set_container(const Container<std::string, Value, Args...>& map, bool str_copy) {
+inline void ObjectRef::set_container(const Container<std::string, T, Args...>& map, bool str_copy) {
     valueRef_.set_container(map, str_copy);
 }
 
@@ -929,21 +889,7 @@ inline T ObjectRef::get_value(const std::string& name, const T& defval) const {
     return *value;
 }
 
-template<typename T, typename std::enable_if<
-    std::is_same<bool, T>::value, T>::type*
->
-inline optional<bool> ObjectRef::get_value(const std::string& name) const {
-    rapidjson::Value key(name.data(), name.length());
-    auto it = valueRef_.value_.FindMember(key);
-    if ( it != valueRef_.value_.MemberEnd() )  {
-        return ValueRef(it->value, valueRef_.alloc_).get<bool>();
-    }
-    return optional<bool>();
-}
-
-template<typename T, typename std::enable_if<
-    detail::is_string<T>::value, T>::type*
->
+template<typename T, detail::enable_if_str_t<T>*>
 inline optional<std::string> ObjectRef::get_value(const std::string& name) const {
     optional<std::string> ret;
     rapidjson::Value key(name.data(), name.length());
@@ -954,9 +900,7 @@ inline optional<std::string> ObjectRef::get_value(const std::string& name) const
     return ret;
 }
 
-template<typename T, typename std::enable_if<
-    detail::is_const_char<T>::value, T>::type*
->
+template<typename T, detail::enable_if_cptr_t<T>*>
 inline optional<const char*> ObjectRef::get_value(const std::string& name) const {
     optional<const char*> ret;
     rapidjson::Value key(name.data(), name.length());
@@ -967,9 +911,7 @@ inline optional<const char*> ObjectRef::get_value(const std::string& name) const
     return ret;
 }
 
-template<typename T, typename std::enable_if<
-    std::numeric_limits<T>::is_bounded && !std::is_same<bool, T>::value, T>::type*
->
+template<typename T, detail::enable_if_num_t<T>*>
 inline optional<T> ObjectRef::get_value(const std::string& name) const {
     rapidjson::Value key(name.data(), name.length());
     auto it = valueRef_.value_.FindMember(key);
@@ -983,11 +925,7 @@ inline optional<T> ObjectRef::get_value(const std::string& name) const {
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// ValueRef::find_xxx tempalte impl
 /////////////////////////////////////////////////////////////////////////////////////////////
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    detail::is_iterable<Container<std::string, Args...>>::value &&
-    !detail::is_map<Container<std::string, Args...>>::value
-    , Container<std::string, Args...> >::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_sequence_t<std::string, Container, Args...>*>
 inline MemberIterator ObjectRef::find_any(Container<std::string> names) const
 {
     for ( const auto& name : names ) {
@@ -999,11 +937,7 @@ inline MemberIterator ObjectRef::find_any(Container<std::string> names) const
     return MemberIterator(valueRef_.value_.MemberEnd(), valueRef_.alloc_);
 }
 
-template<template <typename...> class Container, typename...Args, typename std::enable_if<
-    detail::is_iterable<Container<std::string, Args...>>::value &&
-    !detail::is_map<Container<std::string, Args...>>::value
-    , Container<std::string, Args...> >::type*
->
+template<template <typename...> class Container, typename...Args, detail::enable_if_sequence_t<std::string, Container, Args...>*>
 inline bool ObjectRef::find_all(Container<std::string> names) const
 {
     for ( const auto& name : names ) {
