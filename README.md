@@ -211,3 +211,32 @@ int main() {
 * ValueRef string function always copy string
 * Using string_view prevent copy string
 * More Speed and More careful dangling
+~~~~~~~~~~cpp
+#include "wrapidjson/document.h"
+
+using namespace wrapidjson;
+
+int main() {
+	Document doc;
+
+    // string_view is not copy string
+    auto first = doc["first"];
+    first["chr*"] = "const char* is copy string";
+    first["string] = std::string("std::string is copy string");
+    first["string_view"] = string_view("wrapidjson::string_view is not copy string");
+
+
+    auto vec = std::vector<std::string>{"1","2","3","4","5"};
+
+    // set_container function allow string_view
+    auto second = doc["second"];
+    // copy string
+    second = vec;
+    
+    // not copy string
+    bool str_copy = false;
+    auto third = doc["third"];
+    third.set_container(vec, str_copy);
+	return 0;	
+}
+~~~~~~~~~~
