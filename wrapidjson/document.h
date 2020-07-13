@@ -31,11 +31,11 @@
 
 namespace wrapidjson {
 
-class DocumentBuf
+class DocumentWrapper
 {
 public:
-    DocumentBuf() : document_(std::make_shared<rapidjson::Document>()) {}
-    virtual ~DocumentBuf() = default;
+    DocumentWrapper() : document_(std::make_shared<rapidjson::Document>()) {}
+    virtual ~DocumentWrapper() = default;
 protected:
     std::shared_ptr<rapidjson::Document> document_;
 };
@@ -43,7 +43,7 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Wrapper rapidjson::Document
 /////////////////////////////////////////////////////////////////////////////////////////////
-class Document : public DocumentBuf, public ValueRef {
+class Document : public DocumentWrapper, public ValueRef {
     static const size_t BUFFER_SIZE = 65536;
 public:
     Document();

@@ -81,7 +81,7 @@ inline ValueRef& ValueRef::operator=(const Document& doc)
 /// Document::Document
 /////////////////////////////////////////////////////////////////////////////////////////////
 inline Document::Document()
-    : DocumentBuf()
+    : DocumentWrapper()
     , ValueRef(*document_, document_->GetAllocator())
 {}
 
