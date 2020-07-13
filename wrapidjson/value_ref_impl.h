@@ -6,10 +6,10 @@ namespace wrapidjson {
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// ValueRef for rapidjson::value
 /////////////////////////////////////////////////////////////////////////////////////////////
-inline ValueRef::ValueRef(rapidjson::Value& value, rapidjson::Document::AllocatorType& alloc) 
+inline ValueRef::ValueRef(rapidjson::Value& value, rapidjson::Document::AllocatorType& alloc)
     : value_(value), alloc_(alloc)
 {}
-inline ValueRef::ValueRef(const ValueRef& rfs) 
+inline ValueRef::ValueRef(const ValueRef& rfs)
     : value_(rfs.value_), alloc_(rfs.alloc_)
 {}
 inline ValueRef::ValueRef(const ArrayRef& array)
@@ -372,8 +372,8 @@ inline void ValueRef::set_container(const Container<std::string, T, Args...>& ma
 }
 
 /// assign from map<string, string>
-template<template <typename...> class Container,
-    detail::enable_if_strmap_t<std::string, Container>*
+template<template <typename...> class Container, typename ...Args,
+    detail::enable_if_strmap_t<std::string, Container, Args...>*
 >
 inline void ValueRef::set_container(const Container<std::string, std::string>& map, bool str_copy)
 {

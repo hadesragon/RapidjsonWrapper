@@ -1,4 +1,4 @@
-#ifndef WRAPIDJSON_FORMAT_H_ 
+#ifndef WRAPIDJSON_FORMAT_H_
 #define WRAPIDJSON_FORMAT_H_
 
 #include <cstdio>
@@ -25,7 +25,7 @@ inline std::string format(const std::string& format, Args&& ... args)
     return std::string(buffer.get(), buffer.get() + size - 1);
 }
 
-} // namespace detail 
+} // namespace detail
 } // namespace wrapidjson
 
 #endif // WRAPIDJSON_FORMAT_H_

@@ -1,4 +1,4 @@
-#ifndef WRAPIDJSON_PARSE_H_ 
+#ifndef WRAPIDJSON_PARSE_H_
 #define WRAPIDJSON_PARSE_H_
 
 #include <string>

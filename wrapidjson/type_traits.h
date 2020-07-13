@@ -12,11 +12,11 @@ namespace detail {
 ////////////////////////////////////////////////////////////////////////////////
 // void_t
 ////////////////////////////////////////////////////////////////////////////////
-template<typename... Ts>
+template<typename ...Args>
 struct make_void { typedef void type;};
 
-template<typename... Ts>
-using void_t = typename make_void<Ts...>::type;
+template<typename ...Args>
+using void_t = typename make_void<Args...>::type;
 
 template< bool B, class T = void >
 using enable_if_t = typename std::enable_if<B,T>::type;
@@ -24,18 +24,18 @@ using enable_if_t = typename std::enable_if<B,T>::type;
 ////////////////////////////////////////////////////////////////////////////////
 // is_string
 ////////////////////////////////////////////////////////////////////////////////
-template <typename T>
+template<typename T>
 struct is_string : std::false_type {};
 
-template <typename ...TArgs>
-struct is_string<std::basic_string<TArgs...> > : std::true_type {};
+template<typename ...Args>
+struct is_string<std::basic_string<Args...> > : std::true_type {};
 
 ////////////////////////////////////////////////////////////////////////////////
 // is_const_char
 ////////////////////////////////////////////////////////////////////////////////
-template < typename T >
+template<typename T>
 struct is_const_char : std::false_type {};
-template < >
+template<>
 struct is_const_char < const char * > : std::true_type {};
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,17 +44,17 @@ struct is_const_char < const char * > : std::true_type {};
 template<typename T>
 struct is_map : std::false_type {};
 
-template<typename ...TArgs>
-struct is_map<std::map<TArgs...>> : std::true_type {};
+template<typename ...Args>
+struct is_map<std::map<Args...>> : std::true_type {};
 
-template<typename ...TArgs>
-struct is_map<const std::map<TArgs...>> : std::true_type {};
+template<typename ...Args>
+struct is_map<const std::map<Args...>> : std::true_type {};
 
-template<typename ...TArgs>
-struct is_map<std::unordered_map<TArgs...>> : std::true_type {};
+template<typename ...Args>
+struct is_map<std::unordered_map<Args...>> : std::true_type {};
 
-template<typename ...TArgs>
-struct is_map<const std::unordered_map<TArgs...>> : std::true_type {};
+template<typename ...Args>
+struct is_map<const std::unordered_map<Args...>> : std::true_type {};
 
 ////////////////////////////////////////////////////////////////////////////////
 // is_iterable
