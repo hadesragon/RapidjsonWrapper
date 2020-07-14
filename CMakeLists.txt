@@ -12,8 +12,7 @@ find_package(GTest REQUIRED)
 include(cmake/TargetDistclean.cmake)
 
 # include
-set(GTestInclude ${source_dir}/googletest/include)
-include_directories(${CMAKE_SOURCE_DIR} ${GTestInclude} ${RAPIDJSON_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR} ${RAPIDJSON_INCLUDE_DIRS})
 
 # excutable
 add_executable(json_test ${CMAKE_CURRENT_SOURCE_DIR}/test/json_unittest.cpp)

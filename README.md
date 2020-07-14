@@ -1,22 +1,39 @@
-## Wrapidjson is RapidJSON wrapper
+# Wrapidjson is RapidJSON wrapper
 
 * [RapidJSON GitHub](https://github.com/Tencent/rapidjson/)
 * [RapidJSON Documentation](http://rapidjson.org/)
 
-### Introduction
+## Introduction
 
-* Wrapidjson is RapidJSON Wrapper.
-* Wrapidjson want to hide rapidjson boilerplate code.
+* Wrapidjson is C++11 RapidJSON Wrapper.
 * Wrapidjson want to simple usage.
 * Wrapidjson use [optional-lite](https://github.com/martinmoene/optional-lite), [string-view-lite](https://github.com/martinmoene/string-view-lite) header.
 
-### Installation
+## Requirements
+
+| Tool              | Required  | Version   |
+| ----------------- | --------- | --------- |
+| RapidJSON         | Requried  | 1.0.2     |
+| GTest             | Optional  | 1.6.0     |
+
+## Install Dependencies
+
+### CentOS (7,8)
+
+    $ sudo yum install rapidjson-devel gtest gtest-devel
+
+### macOS
+
+    $ brew install rapidjson
+
+
+## Installation
 
 WrapidJson is a header-only C++ library. Just copy the `wrapidjson` folder to project's include path.
 
-### Usage
+## Usage
 
-#### RapidJSON
+### RapidJSON
 ~~~~~~~~~~cpp
 // rapidjson/example/simpledom/simpledom.cpp`
 #include "rapidjson/document.h"
@@ -46,7 +63,7 @@ int main() {
     return 0;
 }
 ~~~~~~~~~~
-#### Wrapidjson
+### Wrapidjson
 ~~~~~~~~~~cpp
 #include "wrapidjson/document.h"
 #include <iostream>
@@ -58,23 +75,23 @@ int main() {
     // 1. Parse a JSON.
     const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
     Document doc(json);
-    
+
     // 2. Get and Set.
     auto s = obj["stars"];
     s = (s.as<int>() + 1);
-    
+
     // 3. Stringify
     std::string buffer;
     doc.save_to_buffer(buffer);
-    
+
     // Output {"project":"rapidjson","stars":11}
     std::cout << buffer << std::endl;
     return 0;
 }
 ~~~~~~~~~~
-### Sample Code
-#### Document
-* Document has rapidjson::Document 
+## Sample Code
+### Document
+* **Document** has rapidjson::Document
 * Wrapping read & write code
 ~~~~~~~~~~cpp
 #include "wrapidjson/document.h"
@@ -84,17 +101,17 @@ using namespace wrapidjson;
 int main() {
     const  char* json =  "{\"project\":\"rapidjson\",\"stars\":10}";
     Document doc;
-    // String 
+    // String
     bool success = doc.load_from_buffer(json);
     std::string buffer;
     doc.save_to_buffer(buffer);
     doc.set_null();
-    
+
     // File
     success = doc.load_from_file("/home/wrapidjson/json_file");
     success = doc.save_to_file("/home/wrapidjson/new_file");
     doc.set_null();
-    
+
     // Stream
     std::stringstream ss(json), out;
     success = doc.load_from_stream(ss);
@@ -102,8 +119,8 @@ int main() {
     return 0;
 }
 ~~~~~~~~~~
-#### ValueRef
-* ValueRef has **reference** of rapidjson::Value and rapidjson::Document::Allocator
+### ValueRef
+* **ValueRef** has **reference** of rapidjson::Value and rapidjson::Document::Allocator
 * Wrapping Set or Get function
 ~~~~~~~~~~cpp
 #include "wrapidjson/document.h"
@@ -129,15 +146,20 @@ int main() {
     // sval is "123"
     auto dval = strval.as<double>();
     // dval is 123.456
-    
+
     std::string buffer;
-    doc.save_to_string(buffer);
-    std::cout << buffer << std::endl; // {"intval":123, "doubleval":123.456}
+    bool pretty = true;
+    doc.save_to_buffer(buffer, pretty);
+    std::cout << buffer << std::endl;
+    // {
+    //     "intval" : 123,
+    //     "strval" : "123.456"
+    // }
     return 0;
-} 
+}
 ~~~~~~~~~~
-#### ArrayRef
-* ArrayRef has **ValueRef**
+### ArrayRef
+* **ArrayRef** has **ValueRef**
 * Wrapping Array Function
 ~~~~~~~~~~cpp
 #include "wrapidjson/document.h"
@@ -157,10 +179,10 @@ int main() {
 
     // make sub array
     ArrayRef sub_array = array.push_back();
-    
+
     // avaiable set STL container
     sub_array = std::vector<std::string>{"1","2","3","4"};
-    
+
     // auto convert array type
     auto set_array = array.push_back();
     set_array = std::set<double>{1.0, 2.0, 3.0};
@@ -180,12 +202,12 @@ int main() {
     // as_vector convert type
     auto as_vec = array.as_vector<int>();
     // as_vec is [1,2,3,0,0,0]  array or object convert to 0
-    
+
     return 0;
 }
 ~~~~~~~~~~
-#### ObjectRef
-* ObjectRef has ValueRef
+### ObjectRef
+* **ObjectRef** has **ValueRef**
 * Wrapping Map Function
 ~~~~~~~~~~cpp
 #include "wrapidjson/document.h"
@@ -201,7 +223,7 @@ int main() {
 
     // avaiable set std::map or std::unordered_map
     first = std::map<std::string, double>{{"1",1.0}, {"2",2.0}};
-    
+
     // convert to object type
     doc["second"] = std::unordered_map<std::string, uint64_t>{{"1", 1}, {"2",2}};
 
@@ -209,25 +231,27 @@ int main() {
     ObjectRef third = first.insert("4");
 
 
-    // Get value 
+    // Get value
     optional<double> dval = first.get_value<double>("1");
     // Get With Default Value
     double dval2 = first.get_value<double>("1", 0.0);
 
     // Range Base for
     for (auto item : doc["second"].get_object()) {
-        std::cerr << item.name.as<std::string>() << ":" << item.value.as<std::string>() << std::endl;
-    } 
-    for(auto item : third) {
-        std::cerr << item.name.as<std::string>() << ":" << item.value.as<std::string>() << std::endl;
+        std::cout << item.name.as<std::string>();
+        std::cout << ":" << item.value.as<std::string>() << std::endl;
     }
-    
-    return 0;    
+    for(auto item : third) {
+        std::cout << item.name.as<std::string>();
+        std::cout << ":" << item.value.as<std::string>() << std::endl;
+    }
+
+    return 0;
 }
 ~~~~~~~~~~
-#### StringView
-* ValueRef string function always copy string
-* Using string_view prevent copy string
+### StringView
+* **ValueRef** string function always copy string
+* Using string\_view prevent copy string
 * More Speed and More careful dangling
 ~~~~~~~~~~cpp
 #include "wrapidjson/document.h"
@@ -250,11 +274,11 @@ int main() {
     auto second = doc["second"];
     // copy string
     second = vec;
-    
+
     // not copy string
     bool str_copy = false;
     auto third = doc["third"];
     third.set_container(vec, str_copy);
-    return 0;    
+    return 0;
 }
 ~~~~~~~~~~

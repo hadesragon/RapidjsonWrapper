@@ -21,13 +21,13 @@ TEST(wrapidjsonTest, ucs4)
     expected[3] = 0xAF;
 
     Document value;
-    ASSERT_TRUE(value.load_from_buffer(json));
+    EXPECT_TRUE(value.load_from_buffer(json));
     EXPECT_EQ(expected, value["content"].as<std::string>());
 
     std::string irf_json = R"([["id1",0.5742],["id2","32.5742"],["id3",5742]])";
     std::map<std::string, double> irf_score_map;
 
-    ASSERT_TRUE(value.load_from_buffer(irf_json));
+    EXPECT_TRUE(value.load_from_buffer(irf_json));
     for ( const ArrayRef arr2 : value.get_array() ) {
         if (arr2.size() == 2) {
             const char* docid = arr2[0].as<const char*>();
@@ -285,7 +285,7 @@ TEST(wrapidjsonTest, json_get)
         EXPECT_EQ(object.size(), 28u);
 
         EXPECT_FALSE(object["char_i"].get<char>());
-        EXPECT_TRUE(object["char_c"].get<char>());
+        EXPECT_TRUE(static_cast<bool>(object["char_c"].get<char>()));
         EXPECT_FALSE(object["char_s"].get<char>());
 
         EXPECT_EQ(object["char_i"].as<char>(), ',');
@@ -425,18 +425,18 @@ TEST(wrapidjsonTest, object_test)
         root.load_from_buffer(res);
 
         // object get function
-        EXPECT_FALSE(root["a"].get_object().get_value<int64_t>("d"));
-        EXPECT_TRUE(root["a"].get_object().get_value<int64_t>("a"));
-        EXPECT_FALSE(root["b"].get_object().get_value<uint32_t>("d"));
-        EXPECT_TRUE(root["b"].get_object().get_value<uint32_t>("a"));
-        EXPECT_FALSE(root["c"].get_object().get_value<const char*>("d"));
-        EXPECT_TRUE(root["c"].get_object().get_value<const char*>("a"));
+        EXPECT_FALSE(static_cast<bool>(root["a"].get_object().get_value<int64_t>("d")));
+        EXPECT_TRUE(static_cast<bool>(root["a"].get_object().get_value<int64_t>("a")));
+        EXPECT_FALSE(static_cast<bool>(root["b"].get_object().get_value<uint32_t>("d")));
+        EXPECT_TRUE(static_cast<bool>(root["b"].get_object().get_value<uint32_t>("a")));
+        EXPECT_FALSE(static_cast<bool>(root["c"].get_object().get_value<const char*>("d")));
+        EXPECT_TRUE(static_cast<bool>(root["c"].get_object().get_value<const char*>("a")));
         auto re = root["d"].get_object().get_value<double>("d");
-        EXPECT_TRUE(re);
+        EXPECT_TRUE(static_cast<bool>(re));
         EXPECT_EQ(*re, 4.0);
         auto bl = root["e"].get_object().get_value<bool>("b");
-        EXPECT_TRUE(bl);
-        EXPECT_TRUE(*bl);
+        EXPECT_TRUE(static_cast<bool>(bl));
+        EXPECT_TRUE(static_cast<bool>(*bl));
 
         // object get_with_default function
         EXPECT_EQ(root["a"].get_object().get_value<int64_t>("d", -10), -10);

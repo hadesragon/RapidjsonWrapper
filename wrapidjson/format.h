@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <memory>
 
 namespace wrapidjson {
 namespace detail {
