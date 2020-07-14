@@ -51,6 +51,26 @@ TEST(wrapidjsonTest, assign_basic)
     EXPECT_EQ(value["1000s"].as<std::string>(), "1000");
 }
 
+TEST(wrapidjsonTest, long_long_test)
+{
+    Document value;
+    value["long"] = static_cast<long>(1000);
+    value["int64_t"] = static_cast<int64_t>(1000);
+    value["long_long"] = static_cast<long long>(1000);
+
+    value["ulong"] = static_cast<unsigned long>(1000);
+    value["uint64_t"] = static_cast<uint64_t>(1000);
+    value["ulong_long"] = static_cast<unsigned long long>(1000);
+
+    value["long_vector"] = std::vector<long>{1,2,3,4,5,6,7,8,9,0};
+    value["int64_vector"] = std::vector<int64_t>{1,2,3,4,5,6,7,8,9,0};
+    value["long_long_vector"] = std::vector<long long>{1,2,3,4,5,6,7,8,9,0};
+
+    value["long_vector"] = std::vector<unsigned long>{1,2,3,4,5,6,7,8,9,0};
+    value["int64_vector"] = std::vector<uint64_t>{1,2,3,4,5,6,7,8,9,0};
+    value["long_long_vector"] = std::vector<unsigned long long>{1,2,3,4,5,6,7,8,9,0};
+}
+
 TEST(wrapidjsonTest, document_copy)
 {
     std::string result;
