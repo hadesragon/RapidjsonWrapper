@@ -250,8 +250,8 @@ int main() {
 }
 ~~~~~~~~~~
 ### StringView
-* **ValueRef** string function always copy string
-* Using string\_view prevent copy string
+* **ValueRef** string functions are copy string
+* string\_view use string reference
 * More Speed and More careful dangling
 ~~~~~~~~~~cpp
 #include "wrapidjson/document.h"
@@ -263,14 +263,14 @@ int main() {
 
     // string_view is not copy string
     auto first = doc["first"];
-    first["chr*"] = "const char* is copy string";
-    first["string"] = std::string("std::string is copy string");
-    first["string_view"] = string_view("wrapidjson::string_view is not copy string");
+    first["chr*"] = "const char* will copy string";
+    first["string"] = std::string("std::string will copy string");
+    first["string_view"] = string_view("wrapidjson::string_view will not copy string");
 
 
     auto vec = std::vector<std::string>{"1","2","3","4","5"};
 
-    // set_container function allow string_view
+    // set_container function will copy string
     auto second = doc["second"];
     // copy string
     second = vec;
