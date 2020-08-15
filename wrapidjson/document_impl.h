@@ -77,6 +77,15 @@ inline ValueRef& ValueRef::operator=(const Document& doc)
     return *this;
 }
 
+inline std::string ValueRef::to_string()
+{
+    Document doc(*this);
+    std::string str;
+    doc.save_to_buffer(str);
+    return str;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Document::Document
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +93,13 @@ inline Document::Document()
     : DocumentWrapper()
     , ValueRef(*document_, document_->GetAllocator())
 {}
+
+inline Document::Document(const ValueRef& other)
+    : DocumentWrapper()
+    , ValueRef(*document_, document_->GetAllocator())
+{
+    value_.CopyFrom(other.get_rvalue(), alloc_); // copy value explicitly
+}
 
 inline Document::Document(const std::string& buffer)
     : Document()

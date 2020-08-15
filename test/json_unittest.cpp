@@ -71,6 +71,23 @@ TEST(wrapidjsonTest, long_long_test)
     value["long_long_vector"] = std::vector<unsigned long long>{1,2,3,4,5,6,7,8,9,0};
 }
 
+TEST(wrapidjsonTest, to_string_test)
+{
+    Document value;
+
+    value["int"] = 32;
+    value["double"] = 12.34;
+    value["string"] = "string test";
+    value["array"] = std::vector<std::string>{"array", "test"};
+    value["object"] = std::map<std::string, int>{{"obj",1}, {"test",2}};
+
+    EXPECT_EQ(value["int"].to_string(), "32");
+    EXPECT_EQ(value["double"].to_string(), "12.34");
+    EXPECT_EQ(value["string"].to_string(), R"("string test")");
+    EXPECT_EQ(value["array"].to_string(), R"(["array","test"])");
+    EXPECT_EQ(value["object"].to_string(), R"({"obj":1,"test":2})");
+}
+
 TEST(wrapidjsonTest, document_copy)
 {
     std::string result;

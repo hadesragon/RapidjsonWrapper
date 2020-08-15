@@ -48,6 +48,7 @@ class Document : public DocumentWrapper, public ValueRef {
 public:
     Document();
     explicit Document(const std::string&);
+    explicit Document(const ValueRef&);
 
     virtual ~Document() = default;
 

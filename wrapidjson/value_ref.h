@@ -305,6 +305,8 @@ public:
 
     ValueRef* operator->() { return this; } // for iterator
 
+    std::string to_string();
+
     bool empty() const;
 
     size_t size() const;
