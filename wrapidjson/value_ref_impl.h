@@ -139,7 +139,7 @@ inline bool ValueRef::empty() const {
     return false;
 }
 
-size_t ValueRef::size() const {
+inline size_t ValueRef::size() const {
     if ( value_.IsObject() ) {
         return value_.MemberCount();
     } else if ( value_.IsArray() ) {
@@ -155,7 +155,7 @@ size_t ValueRef::size() const {
 /// type = as<type> 인터페이스
 /////////////////////////////////////////////////////////////////////////////////////////////
 template<typename T, detail::enable_if_num_t<T>*>
-T ValueRef::as() const {
+inline T ValueRef::as() const {
     if (value_.IsNumber()) {
         if (value_.IsInt()) {
             return static_cast<T>(value_.GetInt());

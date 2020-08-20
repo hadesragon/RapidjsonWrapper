@@ -50,7 +50,7 @@ public:
     explicit Document(const std::string&);
     explicit Document(const ValueRef&);
 
-    virtual ~Document() = default;
+    ~Document() override = default;
 
     /// load JSON data
     bool load_from_file(const std::string& path);
